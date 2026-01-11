@@ -1,7 +1,8 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { Bike, Loader2, Mail, Lock } from 'lucide-react';
+import { Bike, Loader2, Mail, Lock, User as UserIcon } from 'lucide-react';
+import Link from 'next/link';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -10,12 +11,14 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  CardFooter,
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth, initiateAnonymousSignIn, useUser } from '@/firebase';
 import { useEffect, useState } from 'react';
 import { FirebaseClientProvider } from '@/firebase';
+import { Separator } from '@/components/ui/separator';
 
 function AdminLoginPageContent() {
   const router = useRouter();
@@ -101,6 +104,20 @@ function AdminLoginPageContent() {
             </Button>
           </form>
         </CardContent>
+         <CardFooter className="flex-col gap-4 pt-4">
+            <div className="relative w-full">
+                <Separator />
+                <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-2 text-xs text-muted-foreground">
+                    OR
+                </span>
+            </div>
+             <Button variant="link" size="sm" asChild className="text-muted-foreground">
+                <Link href="/renter-login">
+                    <UserIcon className="mr-2 h-4 w-4" />
+                    Continue as Renter
+                </Link>
+            </Button>
+        </CardFooter>
       </Card>
     </div>
   );
