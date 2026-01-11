@@ -1,14 +1,11 @@
+
+'use client';
+
 import Link from "next/link"
 import {
   Bike,
-  Home,
   LogOut,
-  MapPin,
-  Bell,
-  Users,
-  Wrench,
-  ListOrdered,
-  Package2,
+  Loader2,
 } from "lucide-react"
 
 import {
@@ -16,23 +13,28 @@ import {
   Sidebar,
   SidebarHeader,
   SidebarContent,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
   SidebarFooter,
   SidebarInset,
 } from "@/components/ui/sidebar"
 import { DashboardHeader } from "@/components/dashboard-header"
 import { NavLinks } from "./nav-links"
-import { FirebaseClientProvider } from "@/firebase"
+import { FirebaseClientProvider, useUser } from "@/firebase"
 
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+function DashboardContent({ children }: { children: React.ReactNode }) {
+  const { user, isUserLoading } = useUser();
+
+  if (isUserLoading) {
+    return (
+      <div className="flex min-h-screen w-full items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-muted-foreground">Loading Dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <FirebaseClientProvider>
       <SidebarProvider>
         <Sidebar>
           <SidebarHeader>
@@ -70,6 +72,20 @@ export default function DashboardLayout({
           </main>
         </SidebarInset>
       </SidebarProvider>
+  );
+}
+
+
+export default function DashboardLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  return (
+    <FirebaseClientProvider>
+      <DashboardContent>
+        {children}
+      </DashboardContent>
     </FirebaseClientProvider>
   )
 }
