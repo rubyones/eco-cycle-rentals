@@ -92,41 +92,21 @@ function RenterDashboardContent() {
   }, [activeRental]);
 
   const handleEndRental = () => {
-    if (!firestore || !activeRental) return;
+    if (!firestore || !activeRental || !user) return;
     
     const rentalRef = doc(firestore, 'rentals', activeRental.id);
     const ebikeRef = doc(firestore, 'ebikes', activeRental.ebikeId);
+    const paymentsCollection = collection(firestore, 'payments');
 
     const endTime = new Date();
     const finalFee = parseFloat(fee);
 
-    updateDocumentNonBlocking(rentalRef, {
-      status: 'completed',
-      endTime: endTime.toISOString(),
-      rentalFee: finalFee
-    });
-    
-    updateDocumentNonBlocking(ebikeRef, {
-      status: 'Available'
-    });
-
-    toast({
-      title: "Rental Ended",
-      description: "Thank you for riding with us!",
-    });
-  }
-
-  const handlePayment = (rental: Rental) => {
-    if (!firestore || !user) return;
-
-    const paymentsCollection = collection(firestore, 'payments');
-    const rentalRef = doc(firestore, 'rentals', rental.id);
-
+    // Create payment record
     const newPayment: Omit<Payment, 'id'> = {
         renterId: user.uid,
-        rentalId: rental.id,
-        paymentDate: new Date().toISOString(),
-        amount: rental.rentalFee,
+        rentalId: activeRental.id,
+        paymentDate: endTime.toISOString(),
+        amount: finalFee,
         status: 'paid'
     };
 
@@ -134,15 +114,27 @@ function RenterDashboardContent() {
         if(docRef) {
             updateDocumentNonBlocking(doc(firestore, 'payments', docRef.id), { id: docRef.id });
         }
-        updateDocumentNonBlocking(rentalRef, { status: 'paid' });
+        
+        // Update rental status to paid
+        updateDocumentNonBlocking(rentalRef, {
+          status: 'paid',
+          endTime: endTime.toISOString(),
+          rentalFee: finalFee
+        });
+        
+        // Update bike status to available
+        updateDocumentNonBlocking(ebikeRef, {
+          status: 'Available'
+        });
+
         toast({
-            title: "Payment Successful",
-            description: `Payment of ₱${rental.rentalFee.toFixed(2)} has been processed.`,
+          title: "Payment Successful & Rental Ended",
+          description: `Payment of ₱${finalFee.toFixed(2)} received. Thank you for riding!`,
         });
     }).catch(() => {
         toast({
             title: "Payment Failed",
-            description: "There was an issue processing your payment. Please try again.",
+            description: "Could not process payment or end rental. Please try again.",
             variant: "destructive"
         });
     });
@@ -226,7 +218,7 @@ function RenterDashboardContent() {
                             </div>
                         </div>
                         <Button className="w-full" onClick={handleEndRental}>
-                            Lock E-Bike & End Rental
+                            Pay & End Rental
                         </Button>
                       </>
                     )}
@@ -253,18 +245,17 @@ function RenterDashboardContent() {
                                 <TableHead>Duration</TableHead>
                                 <TableHead className="text-right">Fee</TableHead>
                                 <TableHead>Status</TableHead>
-                                <TableHead></TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {isLoadingRentals && (
                                 <TableRow>
-                                    <TableCell colSpan={6} className="h-24 text-center">Loading history...</TableCell>
+                                    <TableCell colSpan={5} className="h-24 text-center">Loading history...</TableCell>
                                 </TableRow>
                             )}
                             {!isLoadingRentals && rentalHistory.length === 0 && (
                                 <TableRow>
-                                    <TableCell colSpan={6} className="h-24 text-center">No past rentals found.</TableCell>
+                                    <TableCell colSpan={5} className="h-24 text-center">No past rentals found.</TableCell>
                                 </TableRow>
                             )}
                             {!isLoadingRentals && rentalHistory.map(rental => (
@@ -275,14 +266,6 @@ function RenterDashboardContent() {
                                     <TableCell className="text-right">₱{rental.rentalFee.toFixed(2)}</TableCell>
                                     <TableCell>
                                         <Badge variant={statusVariant[rental.status.toLowerCase() as keyof typeof statusVariant]}>{rental.status}</Badge>
-                                    </TableCell>
-                                    <TableCell className="text-right">
-                                        {rental.status === 'completed' && (
-                                            <Button size="sm" onClick={() => handlePayment(rental)}>
-                                                <CreditCard className="mr-2 h-4 w-4"/>
-                                                Pay Now
-                                            </Button>
-                                        )}
                                     </TableCell>
                                 </TableRow>
                             ))}
