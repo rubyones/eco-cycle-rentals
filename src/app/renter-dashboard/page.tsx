@@ -6,9 +6,9 @@ import { useRouter } from 'next/navigation';
 import { Bike, Clock, DollarSign, Loader2, LogOut, History, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useUser, useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { useUser, useCollection, useFirestore, useMemoFirebase, useAuth } from '@/firebase';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
-import { collection, query, where, Timestamp } from 'firebase/firestore';
+import { collection, query, where, Timestamp, signOut } from 'firebase/firestore';
 import { Rental, Payment, Station } from '@/lib/types';
 import { formatBikeId } from '@/lib/utils';
 import { addDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase/non-blocking-updates';
@@ -31,6 +31,7 @@ function RenterDashboardContent() {
   const { user, isUserLoading } = useUser();
   const router = useRouter();
   const firestore = useFirestore();
+  const auth = useAuth();
   const { toast } = useToast();
   const [isRentFormOpen, setIsRentFormOpen] = useState(false);
 
@@ -183,6 +184,14 @@ function RenterDashboardContent() {
     return `${hours}h ${minutes}m`;
   }
 
+  const handleLogout = () => {
+    if (auth) {
+      signOut(auth).then(() => {
+        router.push('/renter-login');
+      });
+    }
+  };
+
   if (isUserLoading || !user) {
     return (
       <div className="flex min-h-screen w-full items-center justify-center bg-background">
@@ -204,7 +213,7 @@ function RenterDashboardContent() {
                 <History className="h-5 w-5" />
                 <span className="sr-only">History</span>
             </Button>
-            <Button variant="ghost" size="icon" onClick={() => router.push('/renter-login')}>
+            <Button variant="ghost" size="icon" onClick={handleLogout}>
                 <LogOut className="h-5 w-5" />
                 <span className="sr-only">Log out</span>
             </Button>
