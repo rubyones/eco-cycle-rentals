@@ -24,8 +24,8 @@ function LoginPageContent() {
   const auth = useAuth();
   const { user, isUserLoading } = useUser();
   const [isSigningIn, setIsSigningIn] = useState(false);
-  const [email, setEmail] = useState('sample.renter@example.com');
-  const [password, setPassword] = useState('password123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [firstName, setFirstName] = useState('Sample');
   const [lastName, setLastName] = useState('Renter');
   const [phone, setPhone] = useState('555-555-5555');
@@ -125,9 +125,6 @@ function LoginPageContent() {
                   />
                 </div>
               </div>
-              <p className="px-1 text-xs text-center text-muted-foreground">
-                  Demo login: <strong>sample.renter@example.com</strong> / <strong>password123</strong>
-              </p>
               <Button type="submit" className="w-full" disabled={isSigningIn}>
                 {isSigningIn ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Login'}
               </Button>
