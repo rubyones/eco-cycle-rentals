@@ -36,9 +36,14 @@ import { collection, doc, writeBatch } from "firebase/firestore";
 import { addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 
 const initialStations: Omit<Station, 'id'>[] = [
-    { name: 'Davao City – SM Lanang area', latitude: 7.0931, longitude: 125.6128, parkingBays: 10 },
-    { name: 'Davao City – GMall area', latitude: 7.0731, longitude: 125.6128, parkingBays: 15 },
-    { name: 'Davao City – Ateneo de Davao University area', latitude: 7.065, longitude: 125.608, parkingBays: 20 },
+    { name: 'SM Lanang Premier', latitude: 7.0722, longitude: 125.6163, parkingBays: 10 },
+    { name: 'Abreeza Mall', latitude: 7.0619, longitude: 125.5973, parkingBays: 15 },
+    { name: 'Gaisano Mall of Davao', latitude: 7.0514, longitude: 125.5948, parkingBays: 20 },
+    { name: 'SM City Davao', latitude: 7.0649, longitude: 125.6075, parkingBays: 10 },
+    { name: 'NCCC Mall Buhangin', latitude: 7.0702, longitude: 125.6261, parkingBays: 15 },
+    { name: 'Victoria Plaza', latitude: 7.0748, longitude: 125.6105, parkingBays: 20 },
+    { name: 'SM City Toril', latitude: 6.9845, longitude: 125.6253, parkingBays: 10 },
+    { name: 'NCCC Mall Davao (Main)', latitude: 7.0690, longitude: 125.6090, parkingBays: 15 },
 ];
 
 export default function StationsPage() {
