@@ -26,19 +26,31 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { stations } from "@/lib/data";
+import { stations as initialStations, Station } from "@/lib/data";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { useToast } from "@/hooks/use-toast";
+import React, { useState } from "react";
+import { AddStationForm } from "./add-station-form";
 
 export default function StationsPage() {
     const mapPlaceholder = PlaceHolderImages.find(img => img.id === 'map-placeholder');
     const { toast } = useToast();
+    const [stations, setStations] = useState<Station[]>(initialStations);
+    const [isAddStationOpen, setIsAddStationOpen] = useState(false);
 
-    const handleAddStation = () => {
+    const handleAddStation = (newStation: Omit<Station, 'id' | 'bikes'>) => {
+        const nextId = `STN${(parseInt(stations[stations.length - 1].id.replace('STN', '')) + 1).toString().padStart(3, '0')}`;
+        const newStationWithId: Station = {
+            ...newStation,
+            id: nextId,
+            bikes: 0,
+        };
+        setStations(currentStations => [...currentStations, newStationWithId]);
         toast({
-            title: "Add Station",
-            description: "This would open a form to add a new station.",
+            title: "Station Added",
+            description: `Station ${newStationWithId.name} has been successfully added.`,
         });
+        setIsAddStationOpen(false);
     };
 
     const handleEdit = (stationId: string) => {
@@ -56,6 +68,7 @@ export default function StationsPage() {
     };
 
   return (
+    <>
     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
       <Card className="lg:col-span-4">
         <CardHeader>
@@ -66,7 +79,7 @@ export default function StationsPage() {
                 Add or update station information and monitor e-bike distribution.
               </CardDescription>
             </div>
-            <Button size="sm" className="gap-1" onClick={handleAddStation}>
+            <Button size="sm" className="gap-1" onClick={() => setIsAddStationOpen(true)}>
               <PlusCircle className="h-3.5 w-3.5" />
               <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
                 Add Station
@@ -135,5 +148,11 @@ export default function StationsPage() {
           </CardContent>
       </Card>
     </div>
+     <AddStationForm 
+        isOpen={isAddStationOpen} 
+        onOpenChange={setIsAddStationOpen}
+        onSubmit={handleAddStation}
+    />
+    </>
   );
 }
