@@ -20,8 +20,8 @@ export default function LoginPage() {
             <div className="inline-block rounded-lg bg-primary p-3 text-primary-foreground">
                 <Bike className="h-6 w-6" />
             </div>
-          <CardTitle className="text-3xl">eBike Manager</CardTitle>
-          <CardDescription>Enter your admin credentials to access the dashboard</CardDescription>
+          <CardTitle className="text-3xl">eBike Admin</CardTitle>
+          <CardDescription>Please log in to continue</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4">
