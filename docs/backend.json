@@ -147,7 +147,10 @@
           "format": "date-time"
         },
         "endTime": {
-          "type": "string",
+          "type": [
+            "string",
+            "null"
+          ],
           "description": "The date and time when the rental ended (can be null if the rental is still active).",
           "format": "date-time"
         },
@@ -295,164 +298,61 @@
     ]
   },
   "firestore": {
-    "structure": [
-      {
-        "path": "/renters/{renterId}",
-        "definition": {
-          "entityName": "Renter",
-          "schema": {
-            "$ref": "#/backend/entities/Renter"
-          },
-          "description": "Stores renter profiles. Uses path-based ownership for related subcollections.",
-          "params": [
-            {
-              "name": "renterId",
-              "description": "The unique identifier for the renter."
-            }
-          ]
-        }
+    "/renters/{renterId}": {
+      "schema": {
+        "$ref": "#/entities/Renter"
       },
-      {
-        "path": "/renters/{renterId}/rentals/{rentalId}",
-        "definition": {
-          "entityName": "Rental",
-          "schema": {
-            "$ref": "#/backend/entities/Rental"
-          },
-          "description": "Stores rental transactions associated with a specific renter. This enforces path-based ownership.",
-          "params": [
-            {
-              "name": "renterId",
-              "description": "The unique identifier for the renter."
-            },
-            {
-              "name": "rentalId",
-              "description": "The unique identifier for the rental transaction."
-            }
-          ]
-        }
+      "description": "Stores renter profiles. Uses path-based ownership for related subcollections."
+    },
+    "/renters/{renterId}/rentals/{rentalId}": {
+      "schema": {
+        "$ref": "#/entities/Rental"
       },
-      {
-        "path": "/renters/{renterId}/payments/{paymentId}",
-        "definition": {
-          "entityName": "Payment",
-          "schema": {
-            "$ref": "#/backend/entities/Payment"
-          },
-          "description": "Stores payment information associated with a specific renter. Enforces path-based ownership.",
-          "params": [
-            {
-              "name": "renterId",
-              "description": "The unique identifier for the renter."
-            },
-            {
-              "name": "paymentId",
-              "description": "The unique identifier for the payment."
-            }
-          ]
-        }
+      "description": "Stores rental transactions associated with a specific renter. This enforces path-based ownership."
+    },
+    "/renters/{renterId}/payments/{paymentId}": {
+      "schema": {
+        "$ref": "#/entities/Payment"
       },
-      {
-        "path": "/renters/{renterId}/notifications/{notificationId}",
-        "definition": {
-          "entityName": "Notification",
-          "schema": {
-            "$ref": "#/backend/entities/Notification"
-          },
-          "description": "Stores notifications associated with a specific renter. Enforces path-based ownership.",
-          "params": [
-            {
-              "name": "renterId",
-              "description": "The unique identifier for the renter."
-            },
-            {
-              "name": "notificationId",
-              "description": "The unique identifier for the notification."
-            }
-          ]
-        }
+      "description": "Stores payment information associated with a specific renter. Enforces path-based ownership."
+    },
+    "/renters/{renterId}/notifications/{notificationId}": {
+      "schema": {
+        "$ref": "#/entities/Notification"
       },
-       {
-        "path": "/rentals/{rentalId}",
-        "definition": {
-          "entityName": "Rental",
-          "schema": {
-            "$ref": "#/backend/entities/Rental"
-          },
-          "description": "Stores all rental transactions for administrative access.",
-          "params": [
-            {
-              "name": "rentalId",
-              "description": "The unique identifier for the rental transaction."
-            }
-          ]
-        }
+      "description": "Stores notifications associated with a specific renter. Enforces path-based ownership."
+    },
+    "/rentals/{rentalId}": {
+      "schema": {
+        "$ref": "#/entities/Rental"
       },
-      {
-        "path": "/payments/{paymentId}",
-        "definition": {
-          "entityName": "Payment",
-          "schema": {
-            "$ref": "#/backend/entities/Payment"
-          },
-          "description": "Stores all payment transactions for administrative access.",
-          "params": [
-            {
-              "name": "paymentId",
-              "description": "The unique identifier for the payment."
-            }
-          ]
-        }
+      "description": "Stores all rental transactions for administrative access."
+    },
+    "/payments/{paymentId}": {
+      "schema": {
+        "$ref": "#/entities/Payment"
       },
-      {
-        "path": "/ebikes/{ebikeId}",
-        "definition": {
-          "entityName": "Ebike",
-          "schema": {
-            "$ref": "#/backend/entities/Ebike"
-          },
-          "description": "Stores e-bike information.",
-          "params": [
-            {
-              "name": "ebikeId",
-              "description": "The unique identifier for the e-bike."
-            }
-          ]
-        }
+      "description": "Stores all payment transactions for administrative access."
+    },
+    "/ebikes/{ebikeId}": {
+      "schema": {
+        "$ref": "#/entities/Ebike"
       },
-      {
-        "path": "/stations/{stationId}",
-        "definition": {
-          "entityName": "Station",
-          "schema": {
-            "$ref": "#/backend/entities/Station"
-          },
-          "description": "Stores station information.",
-          "params": [
-            {
-              "name": "stationId",
-              "description": "The unique identifier for the station."
-            }
-          ]
-        }
+      "description": "Stores e-bike information."
+    },
+    "/stations/{stationId}": {
+      "schema": {
+        "$ref": "#/entities/Station"
       },
-      {
-        "path": "/maintenance_issues/{maintenanceIssueId}",
-        "definition": {
-          "entityName": "MaintenanceIssue",
-          "schema": {
-            "$ref": "#/backend/entities/MaintenanceIssue"
-          },
-          "description": "Stores maintenance issues reported for e-bikes.",
-          "params": [
-            {
-              "name": "maintenanceIssueId",
-              "description": "The unique identifier for the maintenance issue."
-            }
-          ]
-        }
-      }
-    ],
-    "reasoning": "The Firestore structure is designed to manage an e-bike rental system, focusing on authorization independence and secure list operations (QAPs). It prioritizes path-based ownership for user-related data and uses structural segregation to maintain a homogeneous security posture.  The key collections are `renters`, `ebikes`, `stations`, `rentals`, `payments`, `maintenance_issues`, and `notifications`.  Path-based ownership is implemented where a renter owns rentals, payments, and notifications to easily secure these relationships. A top-level `rentals` and `payments` collection is added for admin dashboard analytics.\n\n*   **Authorization Independence:** Relationships such as rentals belonging to renters are secured via subcollections. This avoids `get()` calls in security rules and enables atomic operations.\n*   **QAPs (Rules are not Filters):** Structural segregation ensures secure list operations by isolating data with different access needs into separate collections.\n*   **DBAC (No Custom Claims):**  The application relies solely on `request.auth.uid`. Access to user-owned data is determined by the path structure itself (`/renters/{renterId}/rentals/{rentalId}`).\n\nThe Admin panel is assumed to have full access and be dealt with separately."
+      "description": "Stores station information."
+    },
+    "/maintenance_issues/{maintenanceIssueId}": {
+      "schema": {
+        "$ref": "#/entities/MaintenanceIssue"
+      },
+      "description": "Stores maintenance issues reported for e-bikes."
+    }
   }
 }
+
+    

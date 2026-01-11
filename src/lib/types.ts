@@ -47,9 +47,20 @@ export type Payment = {
     status: 'paid' | 'pending' | 'failed';
 };
 
+export type MaintenanceIssue = {
+    id: string;
+    ebikeId: string;
+    reportDate: string | Timestamp;
+    description: string;
+    status: 'open' | 'in progress' | 'resolved';
+    resolutionDate?: string | Timestamp | null;
+}
+
 export type NotificationSetting = {
   id: 'rental-reminders' | 'payment-due' | 'lock-warnings';
   label: string;
   description: string;
   active: boolean;
 };
+
+    
