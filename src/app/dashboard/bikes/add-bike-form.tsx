@@ -126,7 +126,7 @@ export function AddBikeForm({ isOpen, onOpenChange, onSubmit, stations }: AddBik
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select a status" />
-                      </Trigger>
+                      </SelectTrigger>
                     </FormControl>
                     <SelectContent>
                       <SelectItem value="Available">Available</SelectItem>
