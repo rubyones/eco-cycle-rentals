@@ -22,8 +22,8 @@ function AdminLoginPageContent() {
   const auth = useAuth();
   const { user, isUserLoading } = useUser();
   const [isSigningIn, setIsSigningIn] = useState(false);
-  const [email, setEmail] = useState('admin@ebike.com');
-  const [password, setPassword] = useState('password123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
 
   useEffect(() => {
     // If user object exists and is no longer loading, redirect to dashboard
