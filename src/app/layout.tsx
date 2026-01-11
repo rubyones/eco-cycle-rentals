@@ -4,8 +4,8 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
 
 export const metadata: Metadata = {
-  title: 'eBike Manager',
-  description: 'Admin Panel for the E-Bike Rental Management System',
+  title: 'EcoCycle Rentals',
+  description: 'Admin Panel for the EcoCycle Rentals Management System',
 };
 
 export default function RootLayout({

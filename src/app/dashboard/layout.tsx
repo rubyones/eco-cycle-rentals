@@ -59,7 +59,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
                 <CircuitBoard className="h-6 w-6" />
               </div>
               <h2 className="text-xl font-bold tracking-tight font-headline">
-                eBike Manager
+                EcoCycle Rentals
               </h2>
             </div>
           </SidebarHeader>

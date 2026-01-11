@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -19,7 +20,7 @@ export default function LandingPage() {
            <div className="mx-auto inline-block rounded-lg bg-primary p-3 text-primary-foreground">
             <Bike className="h-7 w-7" />
           </div>
-          <CardTitle className="text-3xl font-headline">eBike Rental Platform</CardTitle>
+          <CardTitle className="text-3xl font-headline">EcoCycle Rentals</CardTitle>
           <CardDescription>
             Please select your role to continue.
           </CardDescription>

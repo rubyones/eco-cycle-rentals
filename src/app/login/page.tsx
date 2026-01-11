@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useRouter } from 'next/navigation';
@@ -85,7 +86,7 @@ function AdminLoginPageContent() {
           <div className="inline-block rounded-lg bg-primary p-3 text-primary-foreground">
             <Bike className="h-6 w-6" />
           </div>
-          <CardTitle className="text-3xl font-headline">eBike Admin</CardTitle>
+          <CardTitle className="text-3xl font-headline">EcoCycle Rentals</CardTitle>
           <CardDescription>Login to manage the e-bike fleet.</CardDescription>
         </CardHeader>
         <CardContent>
