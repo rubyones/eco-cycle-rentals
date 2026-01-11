@@ -2,7 +2,7 @@
 'use client';
 
 import Image from "next/image";
-import { MoreHorizontal, PlusCircle, Lock, Unlock } from "lucide-react";
+import { MoreHorizontal, PlusCircle, Lock, Unlock, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -28,11 +28,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { bikes as initialBikes, stations as initialStations, Bike } from "@/lib/data";
+import { Ebike, Station } from "@/lib/data";
 import {
     Pagination,
     PaginationContent,
-    PaginationEllipsis,
     PaginationItem,
     PaginationLink,
     PaginationNext,
@@ -42,6 +41,9 @@ import { PlaceHolderImages } from "@/lib/placeholder-images";
 import React, { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { AddBikeForm } from "./add-bike-form";
+import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
+import { collection, doc } from "firebase/firestore";
+import { addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 
 const statusVariant = {
     'Available': 'secondary',
@@ -51,23 +53,41 @@ const statusVariant = {
 } as const;
 
 export default function BikesPage() {
-  const [bikes, setBikes] = useState<Bike[]>(initialBikes);
   const [isAddBikeOpen, setIsAddBikeOpen] = useState(false);
   const { toast } = useToast();
 
-  const handleAddBike = (newBike: Omit<Bike, 'id' | 'image'>) => {
-    const nextId = `EBK${(parseInt(bikes[bikes.length - 1].id.replace('EBK', '')) + 1).toString().padStart(3, '0')}`;
+  const firestore = useFirestore();
+
+  const bikesCollection = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return collection(firestore, 'ebikes');
+  }, [firestore]);
+
+  const stationsCollection = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return collection(firestore, 'stations');
+  }, [firestore]);
+
+  const { data: bikes, isLoading: isLoadingBikes } = useCollection<Ebike>(bikesCollection);
+  const { data: stations, isLoading: isLoadingStations } = useCollection<Station>(stationsCollection);
+
+  const handleAddBike = (newBikeData: Omit<Ebike, 'id' | 'image' | 'locked'>) => {
+    if (!bikesCollection) return;
+    
     const ebikeImages = ['ebike-1', 'ebike-2', 'ebike-3'];
     const randomImage = ebikeImages[Math.floor(Math.random() * ebikeImages.length)];
-    const newBikeWithId: Bike = {
-      ...newBike,
-      id: nextId,
+    
+    const newBike: Omit<Ebike, 'id'> = {
+      ...newBikeData,
+      locked: newBikeData.status === 'Locked',
       image: randomImage,
     };
-    setBikes(currentBikes => [...currentBikes, newBikeWithId]);
+    
+    addDocumentNonBlocking(bikesCollection, newBike);
+    
     toast({
         title: "E-Bike Added",
-        description: `E-Bike ${newBikeWithId.id} has been successfully added.`,
+        description: `A new e-bike has been successfully added.`,
     });
     setIsAddBikeOpen(false);
   };
@@ -79,26 +99,27 @@ export default function BikesPage() {
     });
   };
 
-  const handleToggleLock = (bikeId: string) => {
-    setBikes(currentBikes =>
-      currentBikes.map(bike => {
-        if (bike.id === bikeId) {
-          const newStatus = bike.status === 'Locked' ? 'Available' : 'Locked';
-          toast({
-            title: `Bike ${bikeId} ${newStatus}`,
-            description: `The bike has been successfully ${newStatus.toLowerCase()}.`,
-          });
-          return { ...bike, status: newStatus };
-        }
-        return bike;
-      })
-    );
+  const handleToggleLock = (bike: Ebike) => {
+    if (!firestore) return;
+    const bikeRef = doc(firestore, 'ebikes', bike.id);
+    const newStatus = bike.locked ? 'Available' : 'Locked';
+    const newLockedState = !bike.locked;
+    
+    updateDocumentNonBlocking(bikeRef, { status: newStatus, locked: newLockedState });
+
+    toast({
+      title: `Bike ${bike.id} ${newStatus}`,
+      description: `The bike has been successfully ${newStatus.toLowerCase()}.`,
+    });
   };
 
-  const handleDeactivate = (bikeId: string) => {
+  const handleDelete = (bikeId: string) => {
+    if (!firestore) return;
+    const bikeRef = doc(firestore, 'ebikes', bikeId);
+    deleteDocumentNonBlocking(bikeRef);
     toast({
-        title: `Deactivating ${bikeId}`,
-        description: "This feature is not yet implemented, but in a real app this would deactivate the bike.",
+        title: `Bike Deleted`,
+        description: `Bike ${bikeId} has been successfully deleted.`,
         variant: "destructive"
     });
   }
@@ -115,13 +136,16 @@ export default function BikesPage() {
                 Register new e-bike units, modify existing records, and remotely lock/unlock e-bikes.
                 </CardDescription>
             </div>
-            <Button size="sm" className="gap-1" onClick={() => setIsAddBikeOpen(true)}>
+            <Button size="sm" className="gap-1" onClick={() => setIsAddBikeOpen(true)} disabled={isLoadingStations || !stations || stations.length === 0}>
                 <PlusCircle className="h-3.5 w-3.5" />
                 <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
                 Add E-Bike
                 </span>
             </Button>
         </div>
+         {(!stations || stations.length === 0) && !isLoadingStations && (
+            <p className="text-sm text-destructive pt-2">Please add a station first before adding a bike.</p>
+        )}
       </CardHeader>
       <CardContent>
         <Table>
@@ -133,15 +157,21 @@ export default function BikesPage() {
               <TableHead>E-Bike ID</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="hidden md:table-cell">Battery</TableHead>
-              <TableHead className="hidden md:table-cell">Station ID</TableHead>
+              <TableHead className="hidden md:table-cell">Station</TableHead>
               <TableHead>
                 <span className="sr-only">Actions</span>
               </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {bikes.map((bike) => {
+            {isLoadingBikes && (
+                <TableRow>
+                    <TableCell colSpan={6} className="text-center h-24">Loading bikes...</TableCell>
+                </TableRow>
+            )}
+            {!isLoadingBikes && bikes?.map((bike) => {
               const image = PlaceHolderImages.find(p => p.id === bike.image);
+              const station = stations?.find(s => s.id === bike.stationId);
               return (
               <TableRow key={bike.id}>
                  <TableCell className="hidden sm:table-cell">
@@ -160,8 +190,8 @@ export default function BikesPage() {
                 <TableCell>
                   <Badge variant={statusVariant[bike.status]}>{bike.status}</Badge>
                 </TableCell>
-                <TableCell className="hidden md:table-cell">{bike.battery}%</TableCell>
-                <TableCell className="hidden md:table-cell">{bike.stationId}</TableCell>
+                <TableCell className="hidden md:table-cell">{bike.batteryLevel}%</TableCell>
+                <TableCell className="hidden md:table-cell">{station?.name || bike.stationId}</TableCell>
                 <TableCell>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -173,19 +203,27 @@ export default function BikesPage() {
                     <DropdownMenuContent align="end">
                       <DropdownMenuLabel>Actions</DropdownMenuLabel>
                       <DropdownMenuItem onClick={() => handleEdit(bike.id)}>Edit</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleToggleLock(bike.id)}>
-                        {bike.status === 'Locked' ? (
+                      <DropdownMenuItem onClick={() => handleToggleLock(bike)}>
+                        {bike.locked ? (
                           <><Unlock className="mr-2 h-4 w-4" />Unlock</>
                         ) : (
                           <><Lock className="mr-2 h-4 w-4" />Lock</>
                         )}
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleDeactivate(bike.id)}>Deactivate</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleDelete(bike.id)} className="text-destructive">
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Delete
+                      </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </TableCell>
               </TableRow>
             )})}
+            {!isLoadingBikes && bikes?.length === 0 && (
+                <TableRow>
+                    <TableCell colSpan={6} className="text-center h-24">No bikes found. Add one to get started.</TableCell>
+                </TableRow>
+            )}
           </TableBody>
         </Table>
       </CardContent>
@@ -207,9 +245,6 @@ export default function BikesPage() {
               <PaginationLink href="#">3</PaginationLink>
             </PaginationItem>
             <PaginationItem>
-              <PaginationEllipsis />
-            </PaginationItem>
-            <PaginationItem>
               <PaginationNext href="#" />
             </PaginationItem>
           </PaginationContent>
@@ -220,7 +255,7 @@ export default function BikesPage() {
         isOpen={isAddBikeOpen} 
         onOpenChange={setIsAddBikeOpen}
         onSubmit={handleAddBike}
-        stations={initialStations}
+        stations={stations || []}
     />
     </>
   );

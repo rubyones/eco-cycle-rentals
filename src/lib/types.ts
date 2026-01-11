@@ -1,3 +1,4 @@
+
 export type Renter = {
   id: string;
   name: string;
@@ -9,20 +10,22 @@ export type Renter = {
   joinDate: string;
 };
 
-export type Bike = {
+export type Ebike = {
   id: string;
   stationId: string;
-  battery: number;
+  batteryLevel: number;
   status: 'Available' | 'Locked' | 'In-Use' | 'Maintenance';
+  locked: boolean;
+  lastMaintenanceDate?: string;
   image: string;
 };
 
 export type Station = {
   id: string;
   name: string;
-  location: string;
-  capacity: number;
-  bikes: number;
+  latitude: number;
+  longitude: number;
+  parkingBays: number;
 };
 
 export type Rental = {

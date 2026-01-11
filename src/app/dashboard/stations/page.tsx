@@ -32,8 +32,8 @@ import { useToast } from "@/hooks/use-toast";
 import React, { useState } from "react";
 import { AddStationForm } from "./add-station-form";
 import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
-import { collection } from "firebase/firestore";
-import { addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
+import { collection, doc } from "firebase/firestore";
+import { addDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 
 export default function StationsPage() {
     const mapPlaceholder = PlaceHolderImages.find(img => img.id === 'map-placeholder');
@@ -49,17 +49,9 @@ export default function StationsPage() {
 
     const { data: stations, isLoading } = useCollection<Station>(stationsCollection);
 
-    const handleAddStation = (newStation: Omit<Station, 'id' | 'bikes'>) => {
+    const handleAddStation = (newStation: Omit<Station, 'id'>) => {
       if (!stationsCollection) return;
-        const [latitude, longitude] = newStation.location.split(',').map(s => parseFloat(s.trim()));
-        const newStationWithId: Omit<Station, 'id' | 'location'> & { latitude: number, longitude: number, parkingBays: number } = {
-            name: newStation.name,
-            latitude: latitude,
-            longitude: longitude,
-            parkingBays: newStation.capacity,
-        };
-
-        addDocumentNonBlocking(stationsCollection, newStationWithId);
+        addDocumentNonBlocking(stationsCollection, newStation);
         toast({
             title: "Station Added",
             description: `Station ${newStation.name} has been successfully added.`,
@@ -80,6 +72,17 @@ export default function StationsPage() {
             description: "This would navigate to a station details page.",
         });
     };
+    
+    const handleDelete = (stationId: string) => {
+      if (!firestore) return;
+      const stationRef = doc(firestore, 'stations', stationId);
+      deleteDocumentNonBlocking(stationRef);
+      toast({
+          title: "Station Deleted",
+          description: `Station has been successfully deleted.`,
+          variant: "destructive"
+      });
+  };
 
   return (
     <>
@@ -106,8 +109,7 @@ export default function StationsPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Station Name</TableHead>
-                <TableHead>Bikes</TableHead>
-                <TableHead className="hidden md:table-cell">Capacity</TableHead>
+                <TableHead>Parking Bays</TableHead>
                 <TableHead className="hidden md:table-cell">Location (Lat, Lng)</TableHead>
                 <TableHead>
                   <span className="sr-only">Actions</span>
@@ -117,15 +119,14 @@ export default function StationsPage() {
             <TableBody>
               {isLoading && (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center">Loading stations...</TableCell>
+                  <TableCell colSpan={4} className="text-center">Loading stations...</TableCell>
                 </TableRow>
               )}
               {!isLoading && stations?.map((station) => (
                 <TableRow key={station.id}>
                   <TableCell className="font-medium">{station.name}</TableCell>
-                  <TableCell>{station.bikes}</TableCell>
-                  <TableCell className="hidden md:table-cell">{station.capacity}</TableCell>
-                  <TableCell className="hidden md:table-cell">{station.location}</TableCell>
+                  <TableCell>{station.parkingBays}</TableCell>
+                  <TableCell className="hidden md:table-cell">{`${station.latitude}, ${station.longitude}`}</TableCell>
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -138,11 +139,17 @@ export default function StationsPage() {
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
                         <DropdownMenuItem onClick={() => handleEdit(station.id)}>Edit</DropdownMenuItem>
                         <DropdownMenuItem onClick={() => handleViewDetails(station.id)}>View Details</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleDelete(station.id)} className="text-destructive">Delete</DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
                 </TableRow>
               ))}
+               {!isLoading && stations?.length === 0 && (
+                <TableRow>
+                    <TableCell colSpan={4} className="text-center h-24">No stations found. Add one to get started.</TableCell>
+                </TableRow>
+                )}
             </TableBody>
           </Table>
         </CardContent>

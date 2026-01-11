@@ -29,7 +29,7 @@ import { useEffect } from 'react';
 const formSchema = z.object({
   name: z.string().nonempty({ message: 'Please enter a station name.' }),
   location: z.string().regex(/^-?([1-8]?\d(\.\d+)?|90(\.0+)?),\s*-?((1[0-7]\d)|([1-9]?\d))(\.\d+)?$/, { message: 'Invalid coordinates format (e.g., 40.782, -73.965).' }),
-  capacity: z.coerce.number().min(1, 'Capacity must be at least 1.'),
+  parkingBays: z.coerce.number().min(1, 'Capacity must be at least 1.'),
 });
 
 type AddStationFormValues = z.infer<typeof formSchema>;
@@ -37,7 +37,7 @@ type AddStationFormValues = z.infer<typeof formSchema>;
 interface AddStationFormProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
-  onSubmit: (values: Omit<Station, 'id' | 'bikes'>) => void;
+  onSubmit: (values: Omit<Station, 'id'>) => void;
 }
 
 export function AddStationForm({ isOpen, onOpenChange, onSubmit }: AddStationFormProps) {
@@ -46,7 +46,7 @@ export function AddStationForm({ isOpen, onOpenChange, onSubmit }: AddStationFor
     defaultValues: {
       name: '',
       location: '',
-      capacity: 10,
+      parkingBays: 10,
     },
   });
 
@@ -57,7 +57,13 @@ export function AddStationForm({ isOpen, onOpenChange, onSubmit }: AddStationFor
   }, [isOpen, form]);
 
   const handleSubmit = (values: AddStationFormValues) => {
-    onSubmit(values);
+    const [latitude, longitude] = values.location.split(',').map(s => parseFloat(s.trim()));
+    onSubmit({
+      name: values.name,
+      latitude,
+      longitude,
+      parkingBays: values.parkingBays
+    });
   };
 
   return (
@@ -99,10 +105,10 @@ export function AddStationForm({ isOpen, onOpenChange, onSubmit }: AddStationFor
             />
              <FormField
               control={form.control}
-              name="capacity"
+              name="parkingBays"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Bike Capacity</FormLabel>
+                  <FormLabel>Parking Bays</FormLabel>
                   <FormControl>
                     <Input type="number" placeholder="10" {...field} />
                   </FormControl>

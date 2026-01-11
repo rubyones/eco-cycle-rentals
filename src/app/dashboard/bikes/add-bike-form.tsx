@@ -30,12 +30,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Bike, Station } from '@/lib/types';
+import { Ebike, Station } from '@/lib/types';
 import { useEffect } from 'react';
 
 const formSchema = z.object({
   stationId: z.string().nonempty({ message: 'Please select a station.' }),
-  battery: z.coerce.number().min(0).max(100, 'Battery level must be between 0 and 100.'),
+  batteryLevel: z.coerce.number().min(0).max(100, 'Battery level must be between 0 and 100.'),
   status: z.enum(['Available', 'Locked', 'In-Use', 'Maintenance']),
 });
 
@@ -44,7 +44,7 @@ type AddBikeFormValues = z.infer<typeof formSchema>;
 interface AddBikeFormProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
-  onSubmit: (values: Omit<Bike, 'id' | 'image'>) => void;
+  onSubmit: (values: Omit<Ebike, 'id' | 'image' | 'locked'>) => void;
   stations: Station[];
 }
 
@@ -53,7 +53,7 @@ export function AddBikeForm({ isOpen, onOpenChange, onSubmit, stations }: AddBik
     resolver: zodResolver(formSchema),
     defaultValues: {
       stationId: '',
-      battery: 100,
+      batteryLevel: 100,
       status: 'Available',
     },
   });
@@ -94,7 +94,7 @@ export function AddBikeForm({ isOpen, onOpenChange, onSubmit, stations }: AddBik
                     <SelectContent>
                       {stations.map((station) => (
                         <SelectItem key={station.id} value={station.id}>
-                          {station.name} ({station.id})
+                          {station.name}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -105,7 +105,7 @@ export function AddBikeForm({ isOpen, onOpenChange, onSubmit, stations }: AddBik
             />
             <FormField
               control={form.control}
-              name="battery"
+              name="batteryLevel"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Battery Level (%)</FormLabel>
