@@ -27,11 +27,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Renter } from "@/lib/types";
-import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious, PaginationEllipsis } from "@/components/ui/pagination";
-import React, { useState } from "react";
+import React from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
 import { collection, doc, Timestamp } from "firebase/firestore";
@@ -121,12 +120,10 @@ export default function RentersPage() {
                 </TableRow>
             )}
             {!isLoading && renters?.map((renter) => {
-              const avatar = PlaceHolderImages.find(p => p.id === 'user-avatar-1'); // using a placeholder
               return (
                 <TableRow key={renter.id}>
                   <TableCell className="hidden sm:table-cell">
                     <Avatar className="h-9 w-9">
-                      {avatar && <AvatarImage src={avatar.imageUrl} alt={renter.firstName} data-ai-hint={avatar.imageHint} />}
                       <AvatarFallback>{renter.firstName[0]}{renter.lastName[0]}</AvatarFallback>
                     </Avatar>
                   </TableCell>
