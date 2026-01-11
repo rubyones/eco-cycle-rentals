@@ -90,7 +90,7 @@ service cloud.firestore {
      * On update, ensures the subcollection document's internal `renterId` is immutable.
      */
     function isUpdatingImmutableOwnedDoc() {
-      return request.resource.data.renterId == resource.data.id;
+      return request.resource.data.renterId == resource.data.renterId;
     }
 
     // --------------------------------------------------------------------
