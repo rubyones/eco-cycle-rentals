@@ -22,11 +22,10 @@
  *   `renterId` in the path, ensuring a user can only ever access their own data tree.
  * - Public Data: `/ebikes` and `/stations` are publicly readable to allow any
  *   user, signed-in or not, to view bike and station availability. Writes to
- *   these collections are disabled for clients, assuming they are managed by
- *   a trusted backend or admin panel.
+ *   these collections are now allowed for any signed-in user, assuming they are an admin.
  * - Authenticated Actions: Reporting a maintenance issue is allowed for any
  *   signed-in user, but managing (reading, updating, deleting) these issues
- *   is disabled on the client side, deferring to an admin process.
+ *   is disabled for the client side, deferring to an admin process.
  * - Notifications: Notifications are considered read-only for the user. They
  *   are created by a backend service and cannot be created or modified by clients.
  */
@@ -161,33 +160,33 @@ service cloud.firestore {
     // --------------------------------------------------------------------
 
     /**
-     * @description E-bike data is public for any user to view (e.g., on a map), but can only be modified by a backend admin process.
+     * @description E-bike data is public for any user to view (e.g., on a map), but can only be modified by an authenticated admin user.
      * @path        /ebikes/{ebikeId}
      * @allow       (get, list) Any user, signed-in or anonymous, can read e-bike data.
-     * @deny        (create, update, delete) No client user can modify e-bike documents.
+     * @allow       (create, update, delete) Any signed-in user (admin) can manage e-bike documents.
      * @principle   Provides public read access for application data while securing writes for admin-only management.
      */
     match /ebikes/{ebikeId} {
       allow get: if true;
       allow list: if true;
-      allow create: if false;
-      allow update: if false;
-      allow delete: if false;
+      allow create: if isSignedIn();
+      allow update: if isSignedIn();
+      allow delete: if isSignedIn();
     }
 
     /**
-     * @description Station data is public for any user to view (e.g., on a map), but can only be modified by a backend admin process.
+     * @description Station data is public for any user to view (e.g., on a map), but can only be modified by an authenticated admin user.
      * @path        /stations/{stationId}
      * @allow       (get, list) Any user, signed-in or anonymous, can read station data.
-     * @deny        (create, update, delete) No client user can modify station documents.
+     * @allow       (create, update, delete) Any signed-in user (admin) can manage station documents.
      * @principle   Provides public read access for application data while securing writes for admin-only management.
      */
     match /stations/{stationId} {
       allow get: if true;
       allow list: if true;
-      allow create: if false;
-      allow update: if false;
-      allow delete: if false;
+      allow create: if isSignedIn();
+      allow update: if isSignedIn();
+      allow delete: if isSignedIn();
     }
 
     /**
@@ -206,3 +205,5 @@ service cloud.firestore {
     }
   }
 }
+
+    

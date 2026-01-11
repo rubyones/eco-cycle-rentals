@@ -1,25 +1,43 @@
-import Link from "next/link"
-import { Bike } from "lucide-react"
+'use client';
 
-import { Button } from "@/components/ui/button"
+import { useRouter } from 'next/navigation';
+import { Bike } from 'lucide-react';
+
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+} from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useAuth, initiateAnonymousSignIn } from '@/firebase';
+import { useEffect } from 'react';
+import { FirebaseClientProvider } from '@/firebase';
 
-export default function LoginPage() {
+function LoginPageContent() {
+  const router = useRouter();
+  const auth = useAuth();
+
+  useEffect(() => {
+    if (auth) {
+      initiateAnonymousSignIn(auth);
+    }
+  }, [auth]);
+
+  const handleLogin = () => {
+    router.push('/dashboard');
+  };
+
   return (
     <div className="flex min-h-screen w-full items-center justify-center bg-background px-4">
       <Card className="mx-auto max-w-sm w-full">
         <CardHeader className="space-y-2 text-center">
-            <div className="inline-block rounded-lg bg-primary p-3 text-primary-foreground">
-                <Bike className="h-6 w-6" />
-            </div>
+          <div className="inline-block rounded-lg bg-primary p-3 text-primary-foreground">
+            <Bike className="h-6 w-6" />
+          </div>
           <CardTitle className="text-3xl">eBike Admin</CardTitle>
           <CardDescription>Please log in to continue</CardDescription>
         </CardHeader>
@@ -33,20 +51,37 @@ export default function LoginPage() {
                 placeholder="m@example.com"
                 required
                 defaultValue="admin@ebike.com"
+                disabled
               />
             </div>
             <div className="grid gap-2">
               <div className="flex items-center">
                 <Label htmlFor="password">Password</Label>
               </div>
-              <Input id="password" type="password" required defaultValue="password" />
+              <Input
+                id="password"
+                type="password"
+                required
+                defaultValue="password"
+                disabled
+              />
             </div>
-            <Button type="submit" className="w-full" asChild>
-                <Link href="/dashboard">Login</Link>
+            <Button onClick={handleLogin} className="w-full">
+              Login
             </Button>
           </div>
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }
+
+export default function LoginPage() {
+  return (
+    <FirebaseClientProvider>
+      <LoginPageContent />
+    </FirebaseClientProvider>
+  );
+}
+
+    
