@@ -44,8 +44,8 @@ function RenterDashboardContent() {
 
   const activeRental = useMemo(() => allRentals?.find(r => r.status === 'active') || null, [allRentals]);
   const rentalHistory = useMemo(() => allRentals?.filter(r => r.status !== 'active').sort((a, b) => {
-    const timeA = a.endTime ? (a.endTime instanceof Timestamp ? a.endTime.toMillis() : new Date(a.endTime).getTime()) : 0;
-    const timeB = b.endTime ? (b.endTime instanceof Timestamp ? b.endTime.toMillis() : new Date(b.endTime).getTime()) : 0;
+    const timeA = a.endTime ? (a.endTime instanceof Timestamp ? a.endTime.toMillis() : new Date(a.endTime as string).getTime()) : 0;
+    const timeB = b.endTime ? (b.endTime instanceof Timestamp ? b.endTime.toMillis() : new Date(b.endTime as string).getTime()) : 0;
     return timeB - timeA;
   }) || [], [allRentals]);
 
@@ -64,7 +64,7 @@ function RenterDashboardContent() {
     const calculateRentalInfo = () => {
         const startTime = activeRental.startTime instanceof Timestamp 
             ? activeRental.startTime.toDate() 
-            : new Date(activeRental.startTime);
+            : new Date(activeRental.startTime as string);
         
         const now = new Date();
         const durationMinutes = Math.floor((now.getTime() - startTime.getTime()) / (1000 * 60));
@@ -72,11 +72,13 @@ function RenterDashboardContent() {
         const minutes = durationMinutes % 60;
         
         let currentFee = 0;
-        if (hours >= 1) {
-            currentFee = 120 + (hours - 1) * 50;
-        } else {
+        if (durationMinutes <= 60) {
             currentFee = 120;
+        } else {
+            const extraHours = Math.ceil((durationMinutes - 60) / 60);
+            currentFee = 120 + extraHours * 50;
         }
+
 
         setDuration(`${hours}h ${minutes}m`);
         setFee(currentFee.toFixed(2));
@@ -118,14 +120,14 @@ function RenterDashboardContent() {
     if (timestamp instanceof Timestamp) {
       return timestamp.toDate().toLocaleString();
     }
-    return new Date(timestamp).toLocaleString();
+    return new Date(timestamp as string).toLocaleString();
   }
 
   const calculateDuration = (startTime: string | Timestamp, endTime: string | Timestamp | null) => {
     if (!endTime) return 'N/A';
 
-    const start = startTime instanceof Timestamp ? startTime.toDate() : new Date(startTime);
-    const end = endTime instanceof Timestamp ? endTime.toDate() : new Date(endTime);
+    const start = startTime instanceof Timestamp ? startTime.toDate() : new Date(startTime as string);
+    const end = endTime instanceof Timestamp ? endTime.toDate() : new Date(endTime as string);
 
     const durationMinutes = Math.floor((end.getTime() - start.getTime()) / (1000 * 60));
     const hours = Math.floor(durationMinutes / 60);

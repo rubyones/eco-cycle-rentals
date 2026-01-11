@@ -75,7 +75,10 @@ export function RentBikeForm({ isOpen, onOpenChange, userId }: RentBikeFormProps
     };
 
     addDocumentNonBlocking(rentalCollection, newRental)
-        .then(() => {
+        .then((docRef) => {
+            if(docRef){
+                 updateDocumentNonBlocking(doc(firestore, 'rentals', docRef.id), { id: docRef.id });
+            }
             updateDocumentNonBlocking(bikeRef, { status: 'In-Use' });
             toast({
                 title: "Rental Started!",
