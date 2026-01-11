@@ -27,20 +27,58 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Rental } from "@/lib/types";
+import { Rental, Renter } from "@/lib/types";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious, PaginationEllipsis } from "@/components/ui/pagination";
 import { useToast } from "@/hooks/use-toast";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
+import { collection, doc, getDoc, Timestamp } from "firebase/firestore";
 
 const statusVariant = {
-    'Active': 'default',
-    'Completed': 'secondary',
-    'Overdue': 'destructive',
+    'active': 'default',
+    'completed': 'secondary',
+    'overdue': 'destructive',
 } as const;
+
+type RentalWithRenter = Rental & { renter?: Renter };
+
 
 export default function RentalsPage() {
   const { toast } = useToast();
-  const [rentals, setRentals] = useState<Rental[]>([]);
+  const firestore = useFirestore();
+
+  const rentalsCollection = useMemoFirebase(() => firestore ? collection(firestore, 'rentals') : null, [firestore]);
+  const { data: rentals, isLoading: isLoadingRentals } = useCollection<Rental>(rentalsCollection);
+
+  const [rentalsWithRenters, setRentalsWithRenters] = useState<RentalWithRenter[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  useEffect(() => {
+    if (rentals && firestore) {
+      const fetchRenterDetails = async () => {
+        setIsLoading(true);
+        const rentalsWithRenterData = await Promise.all(
+          rentals.map(async (rental) => {
+            if (rental.renterId) {
+              const renterRef = doc(firestore, "renters", rental.renterId);
+              const renterSnap = await getDoc(renterRef);
+              if (renterSnap.exists()) {
+                return { ...rental, renter: { ...renterSnap.data(), id: renterSnap.id } as Renter };
+              }
+            }
+            return rental;
+          })
+        );
+        setRentalsWithRenters(rentalsWithRenterData);
+        setIsLoading(false);
+      };
+
+      fetchRenterDetails();
+    } else if(!isLoadingRentals) {
+      setIsLoading(false);
+    }
+  }, [rentals, firestore, isLoadingRentals]);
+
 
   const handleViewDetails = (rentalId: string) => {
     toast({
@@ -56,6 +94,13 @@ export default function RentalsPage() {
       variant: "destructive",
     });
   };
+
+  const formatTimestamp = (timestamp: string | Timestamp) => {
+    if (timestamp instanceof Timestamp) {
+      return timestamp.toDate().toLocaleString();
+    }
+    return new Date(timestamp).toLocaleString();
+  }
 
   return (
     <Card>
@@ -81,18 +126,25 @@ export default function RentalsPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {rentals.map((rental) => (
+            {isLoading && (
+              <TableRow>
+                <TableCell colSpan={7} className="h-24 text-center">
+                  Loading rentals...
+                </TableCell>
+              </TableRow>
+            )}
+            {!isLoading && rentalsWithRenters.map((rental) => (
               <TableRow key={rental.id}>
                 <TableCell className="font-medium">{rental.id}</TableCell>
                 <TableCell>
-                  <Badge variant={statusVariant[rental.status]}>{rental.status}</Badge>
+                  <Badge variant={statusVariant[rental.status.toLowerCase() as keyof typeof statusVariant]}>{rental.status}</Badge>
                 </TableCell>
-                <TableCell>{rental.renterName}</TableCell>
-                <TableCell className="hidden md:table-cell">{rental.bikeId}</TableCell>
+                <TableCell>{rental.renter ? `${rental.renter.firstName} ${rental.renter.lastName}` : 'Unknown'}</TableCell>
+                <TableCell className="hidden md:table-cell">{rental.ebikeId}</TableCell>
                 <TableCell className="hidden md:table-cell">
-                  {new Date(rental.startTime).toLocaleString()}
+                  {formatTimestamp(rental.startTime)}
                 </TableCell>
-                <TableCell className="text-right">₱{rental.fee.toFixed(2)}</TableCell>
+                <TableCell className="text-right">₱{(rental.rentalFee || 0).toFixed(2)}</TableCell>
                 <TableCell>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -110,9 +162,9 @@ export default function RentalsPage() {
                 </TableCell>
               </TableRow>
             ))}
-             {rentals.length === 0 && (
+             {!isLoading && rentalsWithRenters.length === 0 && (
                 <TableRow>
-                    <TableCell colSpan={7} className="text-center h-24">Data is not available at this time.</TableCell>
+                    <TableCell colSpan={7} className="text-center h-24">No rentals found.</TableCell>
                 </TableRow>
             )}
           </TableBody>

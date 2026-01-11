@@ -33,15 +33,23 @@ import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious, PaginationEllipsis } from "@/components/ui/pagination";
 import React, { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
+import { collection, doc, Timestamp } from "firebase/firestore";
+import { updateDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 
 const statusVariant = {
-    'Active': 'secondary',
-    'Suspended': 'destructive',
+    'active': 'secondary',
+    'suspended': 'destructive',
+    'deactivated': 'outline'
 } as const;
 
 export default function RentersPage() {
-  const [renters, setRenters] = useState<Renter[]>([]);
   const { toast } = useToast();
+  const firestore = useFirestore();
+
+  const rentersCollection = useMemoFirebase(() => firestore ? collection(firestore, 'renters') : null, [firestore]);
+  const { data: renters, isLoading } = useCollection<Renter>(rentersCollection);
+
 
   const handleViewProfile = (renterId: string) => {
     toast({
@@ -50,30 +58,37 @@ export default function RentersPage() {
     });
   };
 
-  const handleToggleSuspend = (renterId: string) => {
-    setRenters(currentRenters =>
-      currentRenters.map(renter => {
-        if (renter.id === renterId) {
-          const newStatus = renter.status === 'Suspended' ? 'Active' : 'Suspended';
-          toast({
-            title: `Account ${newStatus}`,
-            description: `Renter ${renter.name}'s account has been ${newStatus.toLowerCase()}.`,
-            variant: newStatus === 'Suspended' ? 'destructive' : 'default',
-          });
-          return { ...renter, status: newStatus };
-        }
-        return renter;
-      })
-    );
+  const handleToggleSuspend = (renter: Renter) => {
+    if(!firestore) return;
+    const renterRef = doc(firestore, 'renters', renter.id);
+    const newStatus = renter.status === 'suspended' ? 'active' : 'suspended';
+    
+    updateDocumentNonBlocking(renterRef, { status: newStatus });
+    
+    toast({
+      title: `Account ${newStatus}`,
+      description: `Renter account has been ${newStatus}.`,
+      variant: newStatus === 'suspended' ? 'destructive' : 'default',
+    });
   };
 
   const handleDeactivate = (renterId: string) => {
+    if(!firestore) return;
+    const renterRef = doc(firestore, 'renters', renterId);
+    updateDocumentNonBlocking(renterRef, { status: 'deactivated' });
     toast({
-      title: `Deactivating ${renterId}`,
-      description: "This is a placeholder. A real app would deactivate the account.",
+      title: `Account Deactivated`,
+      description: "Renter account has been deactivated.",
       variant: 'destructive',
     });
   };
+
+  const formatTimestamp = (timestamp: string | Timestamp) => {
+    if (timestamp instanceof Timestamp) {
+      return timestamp.toDate().toLocaleDateString();
+    }
+    return new Date(timestamp).toLocaleDateString();
+  }
 
   return (
     <Card>
@@ -92,7 +107,7 @@ export default function RentersPage() {
               </TableHead>
               <TableHead>Name</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead className="hidden md:table-cell">Rental Status</TableHead>
+              <TableHead className="hidden md:table-cell">Email</TableHead>
               <TableHead className="hidden md:table-cell">Join Date</TableHead>
               <TableHead>
                 <span className="sr-only">Actions</span>
@@ -100,26 +115,30 @@ export default function RentersPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {renters.map((renter) => {
-              const avatar = PlaceHolderImages.find(p => p.id === renter.avatar);
+            {isLoading && (
+                 <TableRow>
+                    <TableCell colSpan={6} className="text-center h-24">Loading renters...</TableCell>
+                </TableRow>
+            )}
+            {!isLoading && renters?.map((renter) => {
+              const avatar = PlaceHolderImages.find(p => p.id === 'user-avatar-1'); // using a placeholder
               return (
                 <TableRow key={renter.id}>
                   <TableCell className="hidden sm:table-cell">
                     <Avatar className="h-9 w-9">
-                      {avatar && <AvatarImage src={avatar.imageUrl} alt={renter.name} data-ai-hint={avatar.imageHint} />}
-                      <AvatarFallback>{renter.name.split(" ").map(n => n[0]).join("")}</AvatarFallback>
+                      {avatar && <AvatarImage src={avatar.imageUrl} alt={renter.firstName} data-ai-hint={avatar.imageHint} />}
+                      <AvatarFallback>{renter.firstName[0]}{renter.lastName[0]}</AvatarFallback>
                     </Avatar>
                   </TableCell>
                   <TableCell className="font-medium">
-                    <div className="font-medium">{renter.name}</div>
-                    <div className="text-sm text-muted-foreground md:hidden">{renter.email}</div>
+                    <div className="font-medium">{renter.firstName} {renter.lastName}</div>
                   </TableCell>
                   <TableCell>
-                    <Badge variant={statusVariant[renter.status]}>{renter.status}</Badge>
+                    <Badge variant={statusVariant[renter.status.toLowerCase() as keyof typeof statusVariant]}>{renter.status}</Badge>
                   </TableCell>
-                  <TableCell className="hidden md:table-cell">{renter.rentalStatus}</TableCell>
+                   <TableCell className="hidden md:table-cell">{renter.email}</TableCell>
                   <TableCell className="hidden md:table-cell">
-                    {new Date(renter.joinDate).toLocaleDateString()}
+                    {formatTimestamp(renter.dateJoined)}
                   </TableCell>
                   <TableCell>
                     <DropdownMenu>
@@ -132,8 +151,8 @@ export default function RentersPage() {
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
                         <DropdownMenuItem onClick={() => handleViewProfile(renter.id)}>View Profile</DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleToggleSuspend(renter.id)}>
-                          {renter.status === 'Suspended' ? 'Unsuspend Account' : 'Suspend Account'}
+                        <DropdownMenuItem onClick={() => handleToggleSuspend(renter)}>
+                          {renter.status === 'suspended' ? 'Unsuspend Account' : 'Suspend Account'}
                         </DropdownMenuItem>
                         <DropdownMenuItem className="text-destructive" onClick={() => handleDeactivate(renter.id)}>Deactivate</DropdownMenuItem>
                       </DropdownMenuContent>
@@ -142,9 +161,9 @@ export default function RentersPage() {
                 </TableRow>
               );
             })}
-             {renters.length === 0 && (
+             {!isLoading && renters?.length === 0 && (
                 <TableRow>
-                    <TableCell colSpan={6} className="text-center h-24">Data is not available at this time.</TableCell>
+                    <TableCell colSpan={6} className="text-center h-24">No renters found.</TableCell>
                 </TableRow>
             )}
           </TableBody>

@@ -1,13 +1,14 @@
 
+import { Timestamp } from "firebase/firestore";
+
 export type Renter = {
   id: string;
-  name: string;
+  firstName: string;
+  lastName: string;
   email: string;
-  avatar: string;
-  status: 'Active' | 'Suspended';
-  rentalStatus: 'Idle' | 'Renting';
-  rentalHistoryCount: number;
-  joinDate: string;
+  phone: string;
+  dateJoined: string | Timestamp;
+  status: 'active' | 'suspended' | 'deactivated';
 };
 
 export type Ebike = {
@@ -30,13 +31,12 @@ export type Station = {
 
 export type Rental = {
   id:string;
-  bikeId: string;
+  ebikeId: string;
   renterId: string;
-  renterName: string;
-  startTime: string;
-  endTime: string | null;
-  fee: number;
-  status: 'Active' | 'Completed' | 'Overdue';
+  startTime: string | Timestamp;
+  endTime: string | Timestamp | null;
+  rentalFee: number;
+  status: 'active' | 'completed' | 'overdue';
 };
 
 export type NotificationSetting = {

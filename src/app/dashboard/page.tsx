@@ -25,7 +25,7 @@ import {
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis } from "recharts";
 import Link from "next/link";
 import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
-import { collection } from "firebase/firestore";
+import { collection, doc, getDoc, Timestamp } from "firebase/firestore";
 import { Ebike, Rental, Renter } from "@/lib/types";
 import { useEffect, useState } from "react";
 import { useUser } from "@/firebase/provider";
@@ -45,34 +45,61 @@ const chartConfig = {
   },
 };
 
+type RecentRental = Rental & { renter?: Renter };
+
 export default function Dashboard() {
   const firestore = useFirestore();
   const { user } = useUser();
 
-  const rentersCollection = useMemoFirebase(() => firestore ? collection(firestore, 'renters') : null, [firestore]);
   const bikesCollection = useMemoFirebase(() => firestore ? collection(firestore, 'ebikes') : null, [firestore]);
   const rentalsCollection = useMemoFirebase(() => firestore ? collection(firestore, 'rentals') : null, [firestore]);
 
-  const { data: renters, isLoading: isLoadingRenters } = useCollection<Renter>(rentersCollection);
   const { data: bikes, isLoading: isLoadingBikes } = useCollection<Ebike>(bikesCollection);
   const { data: rentals, isLoading: isLoadingRentals } = useCollection<Rental>(rentalsCollection);
 
-  const [recentRentals, setRecentRentals] = useState<Rental[]>([]);
+  const [recentRentals, setRecentRentals] = useState<RecentRental[]>([]);
+  const [isLoadingRecent, setIsLoadingRecent] = useState(true);
 
   useEffect(() => {
-    if(rentals) {
-      const sortedRentals = [...rentals].sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime());
-      setRecentRentals(sortedRentals.slice(0, 4));
+    if (rentals && firestore) {
+      const fetchRenterDetails = async () => {
+        setIsLoadingRecent(true);
+        const sortedRentals = [...rentals]
+          .sort((a, b) => {
+            const timeA = a.startTime instanceof Timestamp ? a.startTime.toMillis() : new Date(a.startTime).getTime();
+            const timeB = b.startTime instanceof Timestamp ? b.startTime.toMillis() : new Date(b.startTime).getTime();
+            return timeB - timeA;
+          })
+          .slice(0, 4);
+
+        const rentalsWithRenters = await Promise.all(
+          sortedRentals.map(async (rental) => {
+            if (rental.renterId) {
+              const renterRef = doc(firestore, "renters", rental.renterId);
+              const renterSnap = await getDoc(renterRef);
+              if (renterSnap.exists()) {
+                return { ...rental, renter: { ...renterSnap.data(), id: renterSnap.id } as Renter };
+              }
+            }
+            return rental;
+          })
+        );
+        setRecentRentals(rentalsWithRenters);
+        setIsLoadingRecent(false);
+      };
+
+      fetchRenterDetails();
+    } else if (!isLoadingRentals) {
+        setIsLoadingRecent(false);
     }
-  }, [rentals]);
+  }, [rentals, firestore, isLoadingRentals]);
 
-
-  const totalRenters = renters?.length || 0;
+  const totalRenters = 0; // This is not available due to security rules
   const totalBikes = bikes?.length || 0;
   const activeRentals = rentals?.filter(r => r.status === 'Active').length || 0;
-  const totalRevenue = rentals?.reduce((acc, r) => acc + r.fee, 0) || 0;
+  const totalRevenue = rentals?.reduce((acc, r) => acc + (r.rentalFee || 0), 0) || 0;
 
-  const isLoading = isLoadingRenters || isLoadingBikes || isLoadingRentals;
+  const isLoading = isLoadingBikes || isLoadingRentals;
 
   return (
     <div className="flex flex-col gap-4 md:gap-6">
@@ -94,7 +121,7 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{totalRenters}</div>
-            <p className="text-xs text-muted-foreground">+10 since last month</p>
+            <p className="text-xs text-muted-foreground">See Renter Management</p>
           </CardContent>
         </Card>
         <Card>
@@ -167,11 +194,10 @@ export default function Dashboard() {
             </Button>
           </CardHeader>
           <CardContent className="grid gap-8">
-            {isLoading && <p className="text-sm text-center text-muted-foreground">Loading recent rentals...</p>}
-            {!isLoading && recentRentals.map((rental) => {
-                const renter = renters?.find(r => r.id === rental.renterId);
-                const renterName = renter ? `${renter.firstName} ${renter.lastName}` : 'Unknown Renter';
-                const renterInitials = renter ? `${renter.firstName[0]}${renter.lastName[0]}` : 'UR';
+            {isLoadingRecent && <p className="text-sm text-center text-muted-foreground">Loading recent rentals...</p>}
+            {!isLoadingRecent && recentRentals.map((rental) => {
+                const renterName = rental.renter ? `${rental.renter.firstName} ${rental.renter.lastName}` : 'Unknown Renter';
+                const renterInitials = rental.renter ? `${rental.renter.firstName[0]}${rental.renter.lastName[0]}` : 'UR';
 
                 return (
                     <div key={rental.id} className="flex items-center gap-4">
@@ -182,13 +208,13 @@ export default function Dashboard() {
                         </Avatar>
                         <div className="grid gap-1">
                             <p className="text-sm font-medium leading-none">{renterName}</p>
-                            <p className="text-sm text-muted-foreground">Bike ID: {rental.bikeId}</p>
+                            <p className="text-sm text-muted-foreground">Bike ID: {rental.ebikeId}</p>
                         </div>
-                        <div className="ml-auto font-medium">₱{rental.fee.toFixed(2)}</div>
+                        <div className="ml-auto font-medium">₱{(rental.rentalFee || 0).toFixed(2)}</div>
                     </div>
                 )
             })}
-             {!isLoading && (!rentals || rentals.length === 0) && (
+             {!isLoadingRecent && (!rentals || rentals.length === 0) && (
               <p className="text-sm text-center text-muted-foreground col-span-full h-24 flex items-center justify-center">No recent rentals.</p>
             )}
           </CardContent>
