@@ -24,14 +24,12 @@ import { SidebarTrigger } from '@/components/ui/sidebar';
 import { LogOut, User } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { useAuth } from '@/firebase';
 import { signOut } from 'firebase/auth';
 
 export function DashboardHeader() {
   const pathname = usePathname();
   const segments = pathname.split('/').filter(Boolean);
-  const userAvatar = PlaceHolderImages.find((img) => img.id === 'user-avatar-1');
   const auth = useAuth();
   const router = useRouter();
 
@@ -76,7 +74,6 @@ export function DashboardHeader() {
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="relative h-9 w-9 rounded-full">
             <Avatar className="h-9 w-9">
-              {userAvatar && <AvatarImage src={userAvatar.imageUrl} alt="Admin" />}
               <AvatarFallback>
                 <User />
               </AvatarFallback>
