@@ -36,9 +36,9 @@ import { collection, doc, writeBatch } from "firebase/firestore";
 import { addDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 
 const initialStations: Omit<Station, 'id'>[] = [
-    { name: 'Downtown Plaza', latitude: 40.7128, longitude: -74.0060, parkingBays: 15 },
-    { name: 'Central Park', latitude: 40.7851, longitude: -73.9683, parkingBays: 10 },
-    { name: 'Uptown Square', latitude: 40.8075, longitude: -73.9626, parkingBays: 20 },
+    { name: 'Davao City – SM Lanang area', latitude: 7.0931, longitude: 125.6128, parkingBays: 10 },
+    { name: 'Davao City – GMall area', latitude: 7.0731, longitude: 125.6128, parkingBays: 15 },
+    { name: 'Davao City – Ateneo de Davao University area', latitude: 7.065, longitude: 125.608, parkingBays: 20 },
 ];
 
 export default function StationsPage() {

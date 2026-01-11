@@ -44,7 +44,7 @@ type AddBikeFormValues = z.infer<typeof formSchema>;
 interface AddBikeFormProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
-  onSubmit: (values: Omit<Ebike, 'id' | 'image' | 'locked'>) => void;
+  onSubmit: (values: Omit<Ebike, 'id' | 'image' | 'locked' | 'lastMaintenanceDate'>) => void;
   stations: Station[];
 }
 

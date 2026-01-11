@@ -78,9 +78,9 @@ export default function BikesPage() {
             const batch = writeBatch(firestore);
             
             const initialBikes: Omit<Ebike, 'id'>[] = [
-                { stationId: stations[0].id, batteryLevel: 95, status: 'Available', locked: false, lastMaintenanceDate: new Date().toISOString() },
-                { stationId: stations[0].id, batteryLevel: 82, status: 'Available', locked: false, lastMaintenanceDate: new Date().toISOString() },
-                { stationId: stations[1 % stations.length].id, batteryLevel: 100, status: 'Available', locked: false, lastMaintenanceDate: new Date().toISOString() },
+                { stationId: stations[0].id, batteryLevel: 95, status: 'Available', locked: false, lastMaintenanceDate: new Date().toISOString(), image: '' },
+                { stationId: stations[0].id, batteryLevel: 82, status: 'Available', locked: false, lastMaintenanceDate: new Date().toISOString(), image: '' },
+                { stationId: stations[1 % stations.length].id, batteryLevel: 100, status: 'Available', locked: false, lastMaintenanceDate: new Date().toISOString(), image: '' },
             ];
 
             initialBikes.forEach(bikeData => {
@@ -100,13 +100,14 @@ export default function BikesPage() {
   }, [bikes, isLoadingBikes, stations, firestore, toast, isSeeding]);
 
 
-  const handleAddBike = (newBikeData: Omit<Ebike, 'id' | 'lastMaintenanceDate'>) => {
+  const handleAddBike = (newBikeData: Omit<Ebike, 'id' | 'lastMaintenanceDate' | 'image'>) => {
     if (!bikesCollection) return;
     
     const newBike: Omit<Ebike, 'id'> = {
       ...newBikeData,
       locked: newBikeData.status === 'Locked',
       lastMaintenanceDate: new Date().toISOString(),
+      image: '',
     };
     
     addDocumentNonBlocking(bikesCollection, newBike);
@@ -278,5 +279,3 @@ export default function BikesPage() {
     </>
   );
 }
-
-    
