@@ -28,7 +28,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Ebike, Station } from "@/lib/data";
+import { Ebike, Station } from "@/lib/types";
 import {
     Pagination,
     PaginationContent,
@@ -38,11 +38,11 @@ import {
     PaginationPrevious,
   } from "@/components/ui/pagination";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { AddBikeForm } from "./add-bike-form";
 import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
-import { collection, doc } from "firebase/firestore";
+import { collection, doc, writeBatch } from "firebase/firestore";
 import { addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 
 const statusVariant = {
@@ -55,6 +55,7 @@ const statusVariant = {
 export default function BikesPage() {
   const [isAddBikeOpen, setIsAddBikeOpen] = useState(false);
   const { toast } = useToast();
+  const [isSeeding, setIsSeeding] = useState(false);
 
   const firestore = useFirestore();
 
@@ -70,6 +71,35 @@ export default function BikesPage() {
 
   const { data: bikes, isLoading: isLoadingBikes } = useCollection<Ebike>(bikesCollection);
   const { data: stations, isLoading: isLoadingStations } = useCollection<Station>(stationsCollection);
+  
+  useEffect(() => {
+    if (firestore && bikes?.length === 0 && !isLoadingBikes && stations && stations.length > 0 && !isSeeding) {
+        const seedData = async () => {
+            setIsSeeding(true);
+            const batch = writeBatch(firestore);
+            
+            const initialBikes: Omit<Ebike, 'id'>[] = [
+                { stationId: stations[0].id, batteryLevel: 95, status: 'Available', locked: false, image: 'ebike-1' },
+                { stationId: stations[0].id, batteryLevel: 82, status: 'Available', locked: false, image: 'ebike-2' },
+                { stationId: stations[1 % stations.length].id, batteryLevel: 100, status: 'Available', locked: false, image: 'ebike-3' },
+            ];
+
+            initialBikes.forEach(bikeData => {
+                const docRef = doc(collection(firestore, 'ebikes'));
+                batch.set(docRef, bikeData);
+            });
+
+            await batch.commit();
+            toast({
+                title: "Sample E-Bikes Added",
+                description: "Your database has been seeded with some sample e-bikes.",
+            });
+            setIsSeeding(false);
+        };
+        seedData();
+    }
+  }, [bikes, isLoadingBikes, stations, firestore, toast, isSeeding]);
+
 
   const handleAddBike = (newBikeData: Omit<Ebike, 'id' | 'image' | 'locked'>) => {
     if (!bikesCollection) return;
@@ -164,12 +194,12 @@ export default function BikesPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {isLoadingBikes && (
+            {(isLoadingBikes || isSeeding) && (
                 <TableRow>
                     <TableCell colSpan={6} className="text-center h-24">Loading bikes...</TableCell>
                 </TableRow>
             )}
-            {!isLoadingBikes && bikes?.map((bike) => {
+            {!isLoadingBikes && !isSeeding && bikes?.map((bike) => {
               const image = PlaceHolderImages.find(p => p.id === bike.image);
               const station = stations?.find(s => s.id === bike.stationId);
               return (
@@ -219,7 +249,7 @@ export default function BikesPage() {
                 </TableCell>
               </TableRow>
             )})}
-            {!isLoadingBikes && bikes?.length === 0 && (
+            {!isLoadingBikes && !isSeeding && bikes?.length === 0 && (
                 <TableRow>
                     <TableCell colSpan={6} className="text-center h-24">No bikes found. Add one to get started.</TableCell>
                 </TableRow>

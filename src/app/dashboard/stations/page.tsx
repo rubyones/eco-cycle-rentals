@@ -29,11 +29,17 @@ import {
 import { Station } from "@/lib/types";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { useToast } from "@/hooks/use-toast";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { AddStationForm } from "./add-station-form";
 import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
-import { collection, doc } from "firebase/firestore";
+import { collection, doc, writeBatch } from "firebase/firestore";
 import { addDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates";
+
+const initialStations: Omit<Station, 'id'>[] = [
+    { name: 'Downtown Plaza', latitude: 40.7128, longitude: -74.0060, parkingBays: 15 },
+    { name: 'Central Park', latitude: 40.7851, longitude: -73.9683, parkingBays: 10 },
+    { name: 'Uptown Square', latitude: 40.8075, longitude: -73.9626, parkingBays: 20 },
+];
 
 export default function StationsPage() {
     const mapPlaceholder = PlaceHolderImages.find(img => img.id === 'map-placeholder');
@@ -48,6 +54,28 @@ export default function StationsPage() {
     }, [firestore]);
 
     const { data: stations, isLoading } = useCollection<Station>(stationsCollection);
+    const [isSeeding, setIsSeeding] = useState(false);
+
+    useEffect(() => {
+        if (firestore && stations?.length === 0 && !isLoading && !isSeeding) {
+            const seedData = async () => {
+                setIsSeeding(true);
+                const batch = writeBatch(firestore);
+                initialStations.forEach(stationData => {
+                    const docRef = doc(collection(firestore, 'stations'));
+                    batch.set(docRef, stationData);
+                });
+                await batch.commit();
+                toast({
+                    title: "Sample Stations Added",
+                    description: "Your database has been seeded with some sample stations.",
+                });
+                setIsSeeding(false);
+            };
+            seedData();
+        }
+    }, [stations, isLoading, firestore, toast, isSeeding]);
+
 
     const handleAddStation = (newStation: Omit<Station, 'id'>) => {
       if (!stationsCollection) return;
@@ -117,12 +145,12 @@ export default function StationsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {isLoading && (
+              {(isLoading || isSeeding) && (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center">Loading stations...</TableCell>
+                  <TableCell colSpan={4} className="text-center h-24">Loading stations...</TableCell>
                 </TableRow>
               )}
-              {!isLoading && stations?.map((station) => (
+              {!isLoading && !isSeeding && stations?.map((station) => (
                 <TableRow key={station.id}>
                   <TableCell className="font-medium">{station.name}</TableCell>
                   <TableCell>{station.parkingBays}</TableCell>
@@ -145,7 +173,7 @@ export default function StationsPage() {
                   </TableCell>
                 </TableRow>
               ))}
-               {!isLoading && stations?.length === 0 && (
+               {!isLoading && !isSeeding && stations?.length === 0 && (
                 <TableRow>
                     <TableCell colSpan={4} className="text-center h-24">No stations found. Add one to get started.</TableCell>
                 </TableRow>
