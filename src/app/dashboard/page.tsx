@@ -27,17 +27,9 @@ import Link from "next/link";
 import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
 import { collection, doc, getDoc, Timestamp } from "firebase/firestore";
 import { Ebike, Rental, Renter } from "@/lib/types";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { formatBikeId } from "@/lib/utils";
 
-const chartData = [
-  { month: "January", revenue: 93000 },
-  { month: "February", revenue: 152500 },
-  { month: "March", revenue: 118500 },
-  { month: "April", revenue: 36500 },
-  { month: "May", revenue: 104500 },
-  { month: "June", revenue: 107000 },
-];
 const chartConfig = {
   revenue: {
     label: "Revenue",
@@ -60,6 +52,43 @@ export default function Dashboard() {
 
   const [recentRentals, setRecentRentals] = useState<RecentRental[]>([]);
   const [isLoadingRecent, setIsLoadingRecent] = useState(true);
+
+  const chartData = useMemo(() => {
+    if (!rentals) return [];
+  
+    const monthlyRevenue: { [key: string]: number } = {};
+    const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  
+    rentals.forEach(rental => {
+      const date = rental.startTime instanceof Timestamp ? rental.startTime.toDate() : new Date(rental.startTime);
+      const month = date.getMonth();
+      const year = date.getFullYear();
+      const key = `${year}-${month}`;
+  
+      if (!monthlyRevenue[key]) {
+        monthlyRevenue[key] = 0;
+      }
+      monthlyRevenue[key] += rental.rentalFee;
+    });
+  
+    // Get the last 6 months including the current one
+    const today = new Date();
+    const lastSixMonthsData = [];
+    for (let i = 5; i >= 0; i--) {
+      const date = new Date(today.getFullYear(), today.getMonth() - i, 1);
+      const month = date.getMonth();
+      const year = date.getFullYear();
+      const key = `${year}-${month}`;
+      
+      lastSixMonthsData.push({
+        month: monthNames[month],
+        revenue: monthlyRevenue[key] || 0,
+      });
+    }
+  
+    return lastSixMonthsData;
+  }, [rentals]);
+  
 
   useEffect(() => {
     if (rentals && renters) {
