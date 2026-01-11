@@ -18,8 +18,7 @@
  *
  * Key Security Decisions:
  * - User Isolation: Listing users from the top-level `/renters` collection
- *   is explicitly disallowed to protect user privacy. Admins can read individual
- *   renter docs by ID, but not list them all.
+ *   is now allowed for any signed-in user (admin) for dashboard functionality.
  * - Path-Based Ownership: All rules for subcollections under a user's
  *   document (`/renters/{renterId}/*`) derive their authorization from the
  *   `renterId` in the path, ensuring a user can only ever access their own data tree.
@@ -99,11 +98,10 @@ service cloud.firestore {
     // --------------------------------------------------------------------
 
     /**
-     * @description A renter can create their own profile. Only they or an admin can read/update it. Listing all renters is forbidden for clients.
+     * @description A renter can create their own profile. Only they or an admin can read/update it.
      * @path        /renters/{renterId}
      * @allow       (create) A new user with uid `user_abc` can create `/renters/user_abc`.
-     * @allow       (get) An admin can read `/renters/user_abc`.
-     * @deny        (list) No client can list the `/renters` collection.
+     * @allow       (get, list) An admin can read/list renters.
      * @principle   Enforces self-creation and strict ownership, but allows admin reads.
      */
     match /renters/{renterId} {
@@ -210,8 +208,8 @@ service cloud.firestore {
       allow get: if false;
       allow list: if false;
       allow create: if isSignedIn();
-      update: if false;
-      delete: if false;
+      allow update: if false;
+      allow delete: if false;
     }
   }
 }
