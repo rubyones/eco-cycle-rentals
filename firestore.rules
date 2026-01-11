@@ -167,11 +167,8 @@ service cloud.firestore {
      * @principle   Provides public read access for application data while securing writes for admin-only management.
      */
     match /ebikes/{ebikeId} {
-      allow get: if true;
-      allow list: if true;
-      allow create: if isSignedIn();
-      allow update: if isSignedIn();
-      allow delete: if isSignedIn();
+      allow read: if true;
+      allow write: if isSignedIn();
     }
 
     /**
@@ -182,11 +179,8 @@ service cloud.firestore {
      * @principle   Provides public read access for application data while securing writes for admin-only management.
      */
     match /stations/{stationId} {
-      allow get: if true;
-      allow list: if true;
-      allow create: if isSignedIn();
-      allow update: if isSignedIn();
-      allow delete: if isSignedIn();
+      allow read: if true;
+      allow write: if isSignedIn();
     }
 
     /**
@@ -205,5 +199,3 @@ service cloud.firestore {
     }
   }
 }
-
-    
