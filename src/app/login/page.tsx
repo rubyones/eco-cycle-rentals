@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useRouter } from 'next/navigation';
@@ -18,7 +17,7 @@ import { useAuth, initiateAnonymousSignIn, useUser } from '@/firebase';
 import { useEffect, useState } from 'react';
 import { FirebaseClientProvider } from '@/firebase';
 
-function LoginPageContent() {
+function AdminLoginPageContent() {
   const router = useRouter();
   const auth = useAuth();
   const { user, isUserLoading } = useUser();
@@ -38,13 +37,13 @@ function LoginPageContent() {
     }
   };
 
-  // If we are checking for user or signing in, show a loading state
-  if (isUserLoading || isSigningIn) {
+  // If we are checking for user or signing in, or if user is already logged in, show loading state
+  if (isUserLoading || isSigningIn || user) {
      return (
       <div className="flex min-h-screen w-full items-center justify-center bg-background px-4">
         <div className="flex flex-col items-center gap-4">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <p className="text-muted-foreground">Signing in...</p>
+            <p className="text-muted-foreground">Accessing Admin Panel...</p>
         </div>
       </div>
     );
@@ -58,7 +57,7 @@ function LoginPageContent() {
             <Bike className="h-6 w-6" />
           </div>
           <CardTitle className="text-3xl font-headline">eBike Admin</CardTitle>
-          <CardDescription>Please log in to continue</CardDescription>
+          <CardDescription>Login to manage the e-bike fleet.</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4">
@@ -81,13 +80,16 @@ function LoginPageContent() {
                 id="password"
                 type="password"
                 required
-                defaultValue="password"
+                defaultValue="••••••••"
                 disabled
               />
             </div>
             <Button onClick={handleLogin} className="w-full" disabled={isSigningIn}>
-              Login
+              Continue as Admin
             </Button>
+            <p className="px-1 text-xs text-center text-muted-foreground">
+                This is an anonymous login for demonstration purposes.
+            </p>
           </div>
         </CardContent>
       </Card>
@@ -95,10 +97,10 @@ function LoginPageContent() {
   );
 }
 
-export default function LoginPage() {
+export default function AdminLoginPage() {
   return (
     <FirebaseClientProvider>
-      <LoginPageContent />
+      <AdminLoginPageContent />
     </FirebaseClientProvider>
   );
 }

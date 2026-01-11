@@ -82,4 +82,11 @@
   body {
     @apply bg-background text-foreground;
   }
+  .pattern-graph-paper {
+    background-color: hsl(var(--background));
+    background-image:
+      linear-gradient(hsl(var(--border)) 0.5px, transparent 0.5px),
+      linear-gradient(to right, hsl(var(--border)) 0.5px, hsl(var(--background)) 0.5px);
+    background-size: 15px 15px;
+  }
 }
