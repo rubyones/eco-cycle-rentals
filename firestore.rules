@@ -107,8 +107,8 @@ service cloud.firestore {
      * @principle   Enforces self-creation and strict ownership, but allows admin reads.
      */
     match /renters/{renterId} {
-      allow get: if isSignedIn(); // Allow signed-in users (admins) to get individual renters
-      allow list: if false; // Prevent listing all renters for privacy
+      allow get: if isSignedIn();
+      allow list: if isSignedIn(); // Allow listing renters for admin dashboard
       allow create: if isOwner(renterId) && isCreatingValidRenter(renterId);
       allow update: if isSignedIn(); // Allow admins to update renter status (e.g., suspend)
       allow delete: if isExistingOwner(renterId);

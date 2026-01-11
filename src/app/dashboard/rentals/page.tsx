@@ -32,7 +32,7 @@ import { Pagination, PaginationContent, PaginationItem, PaginationLink, Paginati
 import { useToast } from "@/hooks/use-toast";
 import { useEffect, useState } from "react";
 import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
-import { collection, doc, getDoc, Timestamp } from "firebase/firestore";
+import { collection, doc, Timestamp } from "firebase/firestore";
 import { formatBikeId } from "@/lib/utils";
 
 const statusVariant = {
@@ -49,36 +49,27 @@ export default function RentalsPage() {
   const firestore = useFirestore();
 
   const rentalsCollection = useMemoFirebase(() => firestore ? collection(firestore, 'rentals') : null, [firestore]);
+  const rentersCollection = useMemoFirebase(() => firestore ? collection(firestore, 'renters') : null, [firestore]);
   const { data: rentals, isLoading: isLoadingRentals } = useCollection<Rental>(rentalsCollection);
+  const { data: renters, isLoading: isLoadingRenters } = useCollection<Renter>(rentersCollection);
+
 
   const [rentalsWithRenters, setRentalsWithRenters] = useState<RentalWithRenter[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
-    if (rentals && firestore) {
-      const fetchRenterDetails = async () => {
-        setIsLoading(true);
-        const rentalsWithRenterData = await Promise.all(
-          rentals.map(async (rental) => {
-            if (rental.renterId) {
-              const renterRef = doc(firestore, "renters", rental.renterId);
-              const renterSnap = await getDoc(renterRef);
-              if (renterSnap.exists()) {
-                return { ...rental, renter: { ...renterSnap.data(), id: renterSnap.id } as Renter };
-              }
-            }
-            return rental;
-          })
-        );
-        setRentalsWithRenters(rentalsWithRenterData);
-        setIsLoading(false);
-      };
-
-      fetchRenterDetails();
-    } else if(!isLoadingRentals) {
+    if (rentals && renters) {
+      setIsLoading(true);
+      const rentalsWithRenterData = rentals.map(rental => {
+        const renter = renters.find(r => r.id === rental.renterId);
+        return { ...rental, renter };
+      });
+      setRentalsWithRenters(rentalsWithRenterData);
+      setIsLoading(false);
+    } else if(!isLoadingRentals && !isLoadingRenters) {
       setIsLoading(false);
     }
-  }, [rentals, firestore, isLoadingRentals]);
+  }, [rentals, renters, isLoadingRentals, isLoadingRenters]);
 
 
   const handleViewDetails = (rentalId: string) => {
@@ -96,7 +87,8 @@ export default function RentalsPage() {
     });
   };
 
-  const formatTimestamp = (timestamp: string | Timestamp) => {
+  const formatTimestamp = (timestamp: string | Timestamp | null) => {
+    if (!timestamp) return 'N/A';
     if (timestamp instanceof Timestamp) {
       return timestamp.toDate().toLocaleString();
     }

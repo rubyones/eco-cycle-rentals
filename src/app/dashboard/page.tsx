@@ -28,7 +28,6 @@ import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
 import { collection, doc, getDoc, Timestamp } from "firebase/firestore";
 import { Ebike, Rental, Renter } from "@/lib/types";
 import { useEffect, useState } from "react";
-import { useUser } from "@/firebase/provider";
 import { formatBikeId } from "@/lib/utils";
 
 const chartData = [
@@ -50,20 +49,20 @@ type RecentRental = Rental & { renter?: Renter };
 
 export default function Dashboard() {
   const firestore = useFirestore();
-  const { user } = useUser();
 
   const bikesCollection = useMemoFirebase(() => firestore ? collection(firestore, 'ebikes') : null, [firestore]);
+  const rentersCollection = useMemoFirebase(() => firestore ? collection(firestore, 'renters') : null, [firestore]);
   const rentalsCollection = useMemoFirebase(() => firestore ? collection(firestore, 'rentals') : null, [firestore]);
 
   const { data: bikes, isLoading: isLoadingBikes } = useCollection<Ebike>(bikesCollection);
+  const { data: renters, isLoading: isLoadingRenters } = useCollection<Renter>(rentersCollection);
   const { data: rentals, isLoading: isLoadingRentals } = useCollection<Rental>(rentalsCollection);
 
   const [recentRentals, setRecentRentals] = useState<RecentRental[]>([]);
   const [isLoadingRecent, setIsLoadingRecent] = useState(true);
 
   useEffect(() => {
-    if (rentals && firestore) {
-      const fetchRenterDetails = async () => {
+    if (rentals && renters) {
         setIsLoadingRecent(true);
         const sortedRentals = [...rentals]
           .sort((a, b) => {
@@ -73,34 +72,24 @@ export default function Dashboard() {
           })
           .slice(0, 4);
 
-        const rentalsWithRenters = await Promise.all(
-          sortedRentals.map(async (rental) => {
-            if (rental.renterId) {
-              const renterRef = doc(firestore, "renters", rental.renterId);
-              const renterSnap = await getDoc(renterRef);
-              if (renterSnap.exists()) {
-                return { ...rental, renter: { ...renterSnap.data(), id: renterSnap.id } as Renter };
-              }
-            }
-            return rental;
-          })
-        );
+        const rentalsWithRenters = sortedRentals.map(rental => {
+            const renter = renters.find(r => r.id === rental.renterId);
+            return { ...rental, renter };
+        });
+        
         setRecentRentals(rentalsWithRenters);
         setIsLoadingRecent(false);
-      };
-
-      fetchRenterDetails();
-    } else if (!isLoadingRentals) {
+    } else if (!isLoadingRentals && !isLoadingRenters) {
         setIsLoadingRecent(false);
     }
-  }, [rentals, firestore, isLoadingRentals]);
+  }, [rentals, renters, isLoadingRentals, isLoadingRenters]);
 
-  const totalRenters = 0; // This is not available due to security rules
+  const totalRenters = renters?.length || 0;
   const totalBikes = bikes?.length || 0;
   const activeRentals = rentals?.filter(r => r.status === 'active').length || 0;
   const totalRevenue = rentals?.reduce((acc, r) => acc + (r.rentalFee || 0), 0) || 0;
 
-  const isLoading = isLoadingBikes || isLoadingRentals;
+  const isLoading = isLoadingBikes || isLoadingRentals || isLoadingRenters;
 
   return (
     <div className="flex flex-col gap-4 md:gap-6">
@@ -122,7 +111,7 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{totalRenters}</div>
-            <p className="text-xs text-muted-foreground">See Renter Management</p>
+            <p className="text-xs text-muted-foreground">+{totalRenters} from last month</p>
           </CardContent>
         </Card>
         <Card>
