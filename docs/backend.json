@@ -371,6 +371,22 @@
           ]
         }
       },
+       {
+        "path": "/rentals/{rentalId}",
+        "definition": {
+          "entityName": "Rental",
+          "schema": {
+            "$ref": "#/backend/entities/Rental"
+          },
+          "description": "Stores all rental transactions for administrative access.",
+          "params": [
+            {
+              "name": "rentalId",
+              "description": "The unique identifier for the rental transaction."
+            }
+          ]
+        }
+      },
       {
         "path": "/ebikes/{ebikeId}",
         "definition": {
@@ -420,6 +436,6 @@
         }
       }
     ],
-    "reasoning": "The Firestore structure is designed to manage an e-bike rental system, focusing on authorization independence and secure list operations (QAPs). It prioritizes path-based ownership for user-related data and uses structural segregation to maintain a homogeneous security posture.  The key collections are `renters`, `ebikes`, `stations`, `rentals`, `payments`, `maintenance_issues`, and `notifications`.  Path-based ownership is implemented where a renter owns rentals, payments, and notifications to easily secure these relationships.\n\n*   **Authorization Independence:** Relationships such as rentals belonging to renters are secured via subcollections. This avoids `get()` calls in security rules and enables atomic operations.\n*   **QAPs (Rules are not Filters):** Structural segregation ensures secure list operations by isolating data with different access needs into separate collections.\n*   **DBAC (No Custom Claims):**  The application relies solely on `request.auth.uid`. Access to user-owned data is determined by the path structure itself (`/renters/{renterId}/rentals/{rentalId}`).\n\nThe Admin panel is assumed to have full access and be dealt with separately."
+    "reasoning": "The Firestore structure is designed to manage an e-bike rental system, focusing on authorization independence and secure list operations (QAPs). It prioritizes path-based ownership for user-related data and uses structural segregation to maintain a homogeneous security posture.  The key collections are `renters`, `ebikes`, `stations`, `rentals`, `payments`, `maintenance_issues`, and `notifications`.  Path-based ownership is implemented where a renter owns rentals, payments, and notifications to easily secure these relationships. A top-level `rentals` collection is added for admin dashboard analytics.\n\n*   **Authorization Independence:** Relationships such as rentals belonging to renters are secured via subcollections. This avoids `get()` calls in security rules and enables atomic operations.\n*   **QAPs (Rules are not Filters):** Structural segregation ensures secure list operations by isolating data with different access needs into separate collections.\n*   **DBAC (No Custom Claims):**  The application relies solely on `request.auth.uid`. Access to user-owned data is determined by the path structure itself (`/renters/{renterId}/rentals/{rentalId}`).\n\nThe Admin panel is assumed to have full access and be dealt with separately."
   }
 }

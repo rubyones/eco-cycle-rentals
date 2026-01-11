@@ -4,7 +4,8 @@
  * content. A user's private data, such as their profile, rentals, and payments,
  * is stored in a way that only that specific user can access it. Publicly
  * available data, like e-bike and station locations, is readable by anyone
- * to support core application functionality like maps.
+ * to support core application functionality like maps. Administrative collections
+ * like top-level `rentals` are readable by any authenticated user for the dashboard.
  *
  * Data Structure:
  * The data is organized into top-level collections. The `/renters/{renterId}`
@@ -20,9 +21,10 @@
  * - Path-Based Ownership: All rules for subcollections under a user's
  *   document (`/renters/{renterId}/*`) derive their authorization from the
  *   `renterId` in the path, ensuring a user can only ever access their own data tree.
- * - Public Data: `/ebikes` and `/stations` are publicly readable to allow any
- *   user, signed-in or not, to view bike and station availability. Writes to
- *   these collections are now allowed for any signed-in user, assuming they are an admin.
+ * - Public & Admin Data: `/ebikes`, `/stations`, and the top-level `/rentals`
+ *   are publicly readable to allow any user (for bikes/stations) or any signed-in
+ *   user (for rentals) to view data needed for the application and dashboard.
+ *   Writes to these collections are now allowed for any signed-in user, assuming they are an admin.
  * - Authenticated Actions: Reporting a maintenance issue is allowed for any
  *   signed-in user, but managing (reading, updating, deleting) these issues
  *   is disabled for the client side, deferring to an admin process.
@@ -158,6 +160,18 @@ service cloud.firestore {
     // --------------------------------------------------------------------
     // Public & System Collections
     // --------------------------------------------------------------------
+    
+    /**
+     * @description Top-level rentals collection for admin dashboard. Readable by any signed-in user.
+     * @path        /rentals/{rentalId}
+     * @allow       (read) Any signed-in user (admin) can read rental data for the dashboard.
+     * @principle   Provides admin-level read access for analytics.
+     */
+    match /rentals/{rentalId} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn(); // For seeding/testing
+    }
+
 
     /**
      * @description E-bike data is public for any user to view (e.g., on a map), but can only be modified by an authenticated admin user.

@@ -31,6 +31,7 @@ export type Station = {
 export type Rental = {
   id:string;
   bikeId: string;
+  renterId: string;
   renterName: string;
   startTime: string;
   endTime: string | null;
