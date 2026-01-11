@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useRouter } from 'next/navigation';
@@ -128,7 +129,7 @@ function LoginPageContent() {
             <div className="mx-auto inline-block rounded-lg bg-primary p-3 text-primary-foreground">
               <Bike className="h-6 w-6" />
             </div>
-            <CardTitle className="text-3xl font-headline">Renter Portal</CardTitle>
+            <CardTitle className="text-3xl font-headline">EcoCycle Rentals</CardTitle>
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="login">Login</TabsTrigger>
               <TabsTrigger value="signup">Sign Up</TabsTrigger>
