@@ -193,6 +193,11 @@ function RenterDashboardContent() {
     }
   };
 
+  const getStationName = (stationId: string) => {
+    if (!stations) return '...';
+    return stations.find(s => s.id === stationId)?.name || 'Unknown';
+  };
+
   if (isUserLoading || !user) {
     return (
       <div className="flex min-h-screen w-full items-center justify-center bg-background">
@@ -284,6 +289,7 @@ function RenterDashboardContent() {
                         <TableHeader>
                             <TableRow>
                                 <TableHead>Bike ID</TableHead>
+                                <TableHead>Start Station</TableHead>
                                 <TableHead>Ended</TableHead>
                                 <TableHead>Duration</TableHead>
                                 <TableHead className="text-right">Fee</TableHead>
@@ -291,19 +297,20 @@ function RenterDashboardContent() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {isLoadingRentals && (
+                            {(isLoadingRentals || isLoadingStations) && (
                                 <TableRow>
-                                    <TableCell colSpan={5} className="h-24 text-center">Loading history...</TableCell>
+                                    <TableCell colSpan={6} className="h-24 text-center">Loading history...</TableCell>
                                 </TableRow>
                             )}
-                            {!isLoadingRentals && rentalHistory.length === 0 && (
+                            {!isLoadingRentals && !isLoadingStations && rentalHistory.length === 0 && (
                                 <TableRow>
-                                    <TableCell colSpan={5} className="h-24 text-center">No past rentals found.</TableCell>
+                                    <TableCell colSpan={6} className="h-24 text-center">No past rentals found.</TableCell>
                                 </TableRow>
                             )}
-                            {!isLoadingRentals && rentalHistory.map(rental => (
+                            {!isLoadingRentals && !isLoadingStations && rentalHistory.map(rental => (
                                 <TableRow key={rental.id}>
                                     <TableCell>{formatBikeId(rental.ebikeId)}</TableCell>
+                                    <TableCell>{getStationName(rental.stationId)}</TableCell>
                                     <TableCell>{formatTimestamp(rental.endTime)}</TableCell>
                                     <TableCell>{calculateDuration(rental.startTime, rental.endTime)}</TableCell>
                                     <TableCell className="text-right">₱{rental.rentalFee.toFixed(2)}</TableCell>
@@ -332,3 +339,5 @@ export default function RenterDashboard() {
         </FirebaseClientProvider>
     )
 }
+
+    
