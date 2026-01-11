@@ -10,6 +10,8 @@ import { errorEmitter } from './error-emitter';
 import { FirestorePermissionError } from './errors';
 import { doc, setDoc } from 'firebase/firestore';
 import { getSdks } from '.';
+import { FirebaseError } from 'firebase/app';
+import { useToast } from '@/hooks/use-toast';
 
 /** Initiate anonymous sign-in (non-blocking). */
 export function initiateAnonymousSignIn(authInstance: Auth): void {
@@ -19,8 +21,9 @@ export function initiateAnonymousSignIn(authInstance: Auth): void {
 }
 
 /** Initiate email/password sign-up (non-blocking). */
-export function initiateEmailSignUp(authInstance: Auth, email: string, password: string, extraData?: { [key: string]: any }): void {
-  createUserWithEmailAndPassword(authInstance, email, password)
+export function initiateEmailSignUp(authInstance: Auth, email: string, password: string, extraData?: { [key: string]: any }): Promise<void> {
+  return new Promise((resolve, reject) => {
+    createUserWithEmailAndPassword(authInstance, email, password)
     .then(userCredential => {
       const { firestore } = getSdks(authInstance.app);
       const user = userCredential.user;
@@ -47,17 +50,25 @@ export function initiateEmailSignUp(authInstance: Auth, email: string, password:
             requestResourceData: renterData,
          }));
       });
-
+      resolve();
     })
-    .catch(error => {
+    .catch((error: FirebaseError) => {
         console.error("Email Sign-Up Error:", error);
+        reject(error);
     });
+  });
 }
 
 /** Initiate email/password sign-in (non-blocking). */
-export function initiateEmailSignIn(authInstance: Auth, email: string, password: string): void {
-  signInWithEmailAndPassword(authInstance, email, password)
-  .catch(error => {
-      console.error("Email Sign-In Error:", error);
+export function initiateEmailSignIn(authInstance: Auth, email: string, password: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+      signInWithEmailAndPassword(authInstance, email, password)
+      .then(() => {
+          resolve();
+      })
+      .catch((error: FirebaseError) => {
+          console.error("Email Sign-In Error:", error);
+          reject(error);
+      });
   });
 }

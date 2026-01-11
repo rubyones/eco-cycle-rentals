@@ -15,10 +15,12 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useAuth, initiateAnonymousSignIn, useUser } from '@/firebase';
+import { useAuth, initiateEmailSignIn, useUser } from '@/firebase';
 import { useEffect, useState } from 'react';
 import { FirebaseClientProvider } from '@/firebase';
 import { Separator } from '@/components/ui/separator';
+import { useToast } from '@/hooks/use-toast';
+import { FirebaseError } from 'firebase/app';
 
 function AdminLoginPageContent() {
   const router = useRouter();
@@ -27,6 +29,7 @@ function AdminLoginPageContent() {
   const [isSigningIn, setIsSigningIn] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const { toast } = useToast();
 
   useEffect(() => {
     // If user object exists and is no longer loading, redirect to dashboard
@@ -39,12 +42,32 @@ function AdminLoginPageContent() {
     e.preventDefault();
     if (auth) {
       setIsSigningIn(true);
-      initiateAnonymousSignIn(auth);
+      initiateEmailSignIn(auth, email, password)
+        .then(() => {
+          // The useUser hook will handle redirection on successful login
+        })
+        .catch((error: FirebaseError) => {
+          setIsSigningIn(false);
+          if (error.code === 'auth/invalid-credential') {
+            toast({
+              title: "Login Failed",
+              description: "The email or password you entered is incorrect.",
+              variant: "destructive",
+            });
+          } else {
+             toast({
+              title: "Login Error",
+              description: "An unexpected error occurred. Please try again.",
+              variant: "destructive",
+            });
+          }
+          console.error("Admin Sign-In Error:", error);
+        });
     }
   };
 
   // If we are checking for user or signing in, or if user is already logged in, show loading state
-  if (isUserLoading || isSigningIn || user) {
+  if (isUserLoading || (isSigningIn && !user) || user) {
      return (
       <div className="flex min-h-screen w-full items-center justify-center bg-background px-4">
         <div className="flex flex-col items-center gap-4">
@@ -74,7 +97,7 @@ function AdminLoginPageContent() {
                 <Input
                   id="email"
                   type="email"
-                  placeholder="m@example.com"
+                  placeholder="admin@example.com"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -100,7 +123,7 @@ function AdminLoginPageContent() {
               </div>
             </div>
             <Button type="submit" className="w-full" disabled={isSigningIn}>
-              Continue as Admin
+              {isSigningIn ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Continue as Admin'}
             </Button>
           </form>
         </CardContent>

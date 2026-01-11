@@ -21,6 +21,7 @@ import { FirebaseClientProvider } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
+import { FirebaseError } from 'firebase/app';
 
 function LoginPageContent() {
   const router = useRouter();
@@ -53,20 +54,58 @@ function LoginPageContent() {
         return;
       }
       setIsSigningIn(true);
-      if (action === 'login') {
-        initiateEmailSignIn(auth, email, password);
-      } else {
-        if (!firstName || !lastName || !phone) {
-           toast({
-            title: "Missing Information",
-            description: "Please fill out all fields to sign up.",
-            variant: "destructive",
-          });
+      
+      const authPromise = action === 'login'
+        ? initiateEmailSignIn(auth, email, password)
+        : (() => {
+            if (!firstName || !lastName || !phone) {
+              toast({
+                title: "Missing Information",
+                description: "Please fill out all fields to sign up.",
+                variant: "destructive",
+              });
+              setIsSigningIn(false);
+              return Promise.reject(new Error("Missing signup fields"));
+            }
+            return initiateEmailSignUp(auth, email, password, { firstName, lastName, phone });
+          })();
+
+      authPromise
+        .then(() => {
+          // successful login/signup will be handled by the useEffect
+        })
+        .catch((error: FirebaseError | Error) => {
           setIsSigningIn(false);
-          return;
-        }
-        initiateEmailSignUp(auth, email, password, { firstName, lastName, phone });
-      }
+          if ('code' in error) { // It's a FirebaseError
+            if (error.code === 'auth/invalid-credential') {
+              toast({
+                title: "Login Failed",
+                description: "The email or password you entered is incorrect.",
+                variant: "destructive",
+              });
+            } else if (error.code === 'auth/email-already-in-use') {
+              toast({
+                title: "Sign-Up Failed",
+                description: "An account with this email already exists. Please log in instead.",
+                variant: "destructive",
+              });
+            } else {
+              toast({
+                title: "Authentication Error",
+                description: error.message || "An unexpected error occurred.",
+                variant: "destructive",
+              });
+            }
+          } else { // It's a standard Error
+             if (error.message !== "Missing signup fields") {
+                toast({
+                  title: "Error",
+                  description: error.message || "An unexpected error occurred.",
+                  variant: "destructive",
+                });
+             }
+          }
+        });
     }
   };
 
@@ -207,5 +246,3 @@ export default function RenterLoginPage() {
     </FirebaseClientProvider>
   );
 }
-
-    
