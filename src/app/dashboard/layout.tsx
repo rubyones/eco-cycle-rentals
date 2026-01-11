@@ -7,6 +7,7 @@ import {
   LogOut,
   Loader2,
 } from "lucide-react"
+import { useRouter } from "next/navigation";
 
 import {
   SidebarProvider,
@@ -21,10 +22,22 @@ import {
 } from "@/components/ui/sidebar"
 import { DashboardHeader } from "@/components/dashboard-header"
 import { NavLinks } from "./nav-links"
-import { FirebaseClientProvider, useUser } from "@/firebase"
+import { FirebaseClientProvider, useUser, useAuth } from "@/firebase"
+import { signOut } from "firebase/auth";
 
 function DashboardContent({ children }: { children: React.ReactNode }) {
   const { user, isUserLoading } = useUser();
+  const auth = useAuth();
+  const router = useRouter();
+
+
+  const handleLogout = () => {
+    if (auth) {
+      signOut(auth).then(() => {
+        router.push('/login');
+      });
+    }
+  };
 
   if (isUserLoading) {
     return (
@@ -58,12 +71,10 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
           <SidebarFooter>
               <SidebarMenu>
                   <SidebarMenuItem>
-                      <Link href="/login" className="w-full">
-                          <SidebarMenuButton>
-                              <LogOut />
-                              <span>Log out</span>
-                          </SidebarMenuButton>
-                      </Link>
+                      <SidebarMenuButton onClick={handleLogout}>
+                          <LogOut />
+                          <span>Log out</span>
+                      </SidebarMenuButton>
                   </SidebarMenuItem>
               </SidebarMenu>
           </SidebarFooter>
