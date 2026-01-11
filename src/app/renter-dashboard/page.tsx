@@ -207,7 +207,9 @@ function RenterDashboardContent() {
        <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center justify-between gap-4 border-b bg-background/80 px-4 backdrop-blur-sm sm:px-6">
         <div className="flex items-center gap-2">
             <Bike className="h-6 w-6 text-primary" />
-            <h1 className="text-xl font-bold font-headline">My Rental</h1>
+            <h1 className="text-xl font-bold font-headline">
+              Welcome, {user.displayName || 'Renter'}!
+            </h1>
         </div>
         <div className="flex items-center gap-2">
             <Button variant="ghost" size="icon" onClick={() => document.getElementById('history')?.scrollIntoView({ behavior: 'smooth' })}>
@@ -330,5 +332,3 @@ export default function RenterDashboard() {
         </FirebaseClientProvider>
     )
 }
-
-    
