@@ -69,7 +69,7 @@ export default function Dashboard() {
     }
   
     rentals.forEach(rental => {
-        if(rental.status !== 'completed') return;
+        if(rental.status !== 'completed' && rental.status !== 'paid') return;
 
       const date = rental.endTime instanceof Timestamp ? rental.endTime.toDate() : new Date(rental.endTime as string);
       const month = date.getMonth();
@@ -229,7 +229,7 @@ export default function Dashboard() {
                         </Avatar>
                         <div className="grid gap-1">
                             <p className="text-sm font-medium leading-none">{renterName}</p>
-                            <p className="text-sm text-muted-foreground">Bike ID: {formatBikeId(rental.ebikeId, index)}</p>
+                            <p className="text-sm text-muted-foreground">Bike ID: {formatBikeId(rental.ebikeId)}</p>
                         </div>
                         <div className="ml-auto font-medium">₱{(rental.rentalFee || 0).toFixed(2)}</div>
                     </div>

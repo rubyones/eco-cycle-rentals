@@ -203,7 +203,7 @@ export default function BikesPage() {
                         <Bike className="h-8 w-8 text-muted-foreground" />
                     </div>
                   </TableCell>
-                <TableCell className="font-medium">{formatBikeId(bike.id, index)}</TableCell>
+                <TableCell className="font-medium">{formatBikeId(bike.id)}</TableCell>
                 <TableCell>
                   <Badge variant={statusVariant[bike.status as keyof typeof statusVariant]}>{bike.status}</Badge>
                 </TableCell>

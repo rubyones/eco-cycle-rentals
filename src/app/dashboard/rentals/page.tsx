@@ -39,6 +39,7 @@ const statusVariant = {
     'active': 'default',
     'completed': 'secondary',
     'overdue': 'destructive',
+    'paid': 'outline',
 } as const;
 
 type RentalWithRenter = Rental & { renter?: Renter };
@@ -126,14 +127,14 @@ export default function RentalsPage() {
                 </TableCell>
               </TableRow>
             )}
-            {!isLoading && rentalsWithRenters.map((rental, index) => (
+            {!isLoading && rentalsWithRenters.map((rental) => (
               <TableRow key={rental.id}>
                 <TableCell className="font-medium">{rental.id}</TableCell>
                 <TableCell>
                   <Badge variant={statusVariant[rental.status.toLowerCase() as keyof typeof statusVariant]}>{rental.status}</Badge>
                 </TableCell>
                 <TableCell>{rental.renter ? `${rental.renter.firstName} ${rental.renter.lastName}` : 'Unknown'}</TableCell>
-                <TableCell className="hidden md:table-cell">{formatBikeId(rental.ebikeId, index)}</TableCell>
+                <TableCell className="hidden md:table-cell">{formatBikeId(rental.ebikeId)}</TableCell>
                 <TableCell className="hidden md:table-cell">
                   {formatTimestamp(rental.startTime)}
                 </TableCell>

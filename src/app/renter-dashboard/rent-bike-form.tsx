@@ -130,13 +130,13 @@ export function RentBikeForm({ isOpen, onOpenChange, userId }: RentBikeFormProps
                             </TableCell>
                         </TableRow>
                     )}
-                    {!isLoadingBikes && availableBikes.length > 0 && availableBikes.map((bike, index) => (
+                    {!isLoadingBikes && availableBikes.length > 0 && availableBikes.map((bike) => (
                         <TableRow 
                             key={bike.id} 
                             onClick={() => setSelectedBike(bike)}
                             className={`cursor-pointer ${selectedBike?.id === bike.id ? 'bg-muted/50' : ''}`}
                         >
-                            <TableCell>{formatBikeId(bike.id, index)}</TableCell>
+                            <TableCell>{formatBikeId(bike.id)}</TableCell>
                             <TableCell>{getStationName(bike.stationId)}</TableCell>
                             <TableCell>{bike.batteryLevel}%</TableCell>
                             <TableCell className="text-right">
