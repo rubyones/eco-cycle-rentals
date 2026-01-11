@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { MoreHorizontal, PlusCircle, Lock, Unlock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -33,7 +34,8 @@ import {
     PaginationLink,
     PaginationNext,
     PaginationPrevious,
-  } from "@/components/ui/pagination"
+  } from "@/components/ui/pagination";
+import { PlaceHolderImages } from "@/lib/placeholder-images";
 
 const statusVariant = {
     'Available': 'secondary',
@@ -65,6 +67,9 @@ export default function BikesPage() {
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="hidden w-[100px] sm:table-cell">
+                <span className="sr-only">Image</span>
+              </TableHead>
               <TableHead>E-Bike ID</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="hidden md:table-cell">Battery</TableHead>
@@ -75,8 +80,22 @@ export default function BikesPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {bikes.map((bike) => (
+            {bikes.map((bike) => {
+              const image = PlaceHolderImages.find(p => p.id === bike.image);
+              return (
               <TableRow key={bike.id}>
+                 <TableCell className="hidden sm:table-cell">
+                    {image && (
+                      <Image
+                        alt={bike.id}
+                        className="aspect-square rounded-md object-cover"
+                        data-ai-hint={image.imageHint}
+                        height="64"
+                        src={image.imageUrl}
+                        width="64"
+                      />
+                    )}
+                  </TableCell>
                 <TableCell className="font-medium">{bike.id}</TableCell>
                 <TableCell>
                   <Badge variant={statusVariant[bike.status]}>{bike.status}</Badge>
@@ -104,7 +123,7 @@ export default function BikesPage() {
                   </DropdownMenu>
                 </TableCell>
               </TableRow>
-            ))}
+            )})}
           </TableBody>
         </Table>
       </CardContent>

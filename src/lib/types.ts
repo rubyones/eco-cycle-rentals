@@ -14,6 +14,7 @@ export type Bike = {
   stationId: string;
   battery: number;
   status: 'Available' | 'Locked' | 'In-Use' | 'Maintenance';
+  image: string;
 };
 
 export type Station = {
