@@ -1,11 +1,16 @@
 
-import type {Metadata} from 'next';
+import type {Metadata, Viewport} from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
 
 export const metadata: Metadata = {
   title: 'EcoCycle Rentals',
   description: 'Admin Panel for the EcoCycle Rentals Management System',
+  manifest: "/manifest.json",
+};
+
+export const viewport: Viewport = {
+  themeColor: "#ffffff",
 };
 
 export default function RootLayout({
