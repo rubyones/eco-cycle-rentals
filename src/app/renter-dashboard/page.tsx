@@ -228,7 +228,7 @@ function RenterDashboardContent() {
         </div>
        </header>
       <main className="flex-1 p-4 sm:p-6">
-        <div className="mx-auto max-w-2xl space-y-6">
+        <div className="mx-auto max-w-4xl space-y-6">
             <Card className="w-full">
                 <CardHeader>
                     <CardTitle>Current Rental Status</CardTitle>
@@ -290,6 +290,7 @@ function RenterDashboardContent() {
                             <TableRow>
                                 <TableHead>Bike ID</TableHead>
                                 <TableHead>Start Station</TableHead>
+                                <TableHead>Started</TableHead>
                                 <TableHead>Ended</TableHead>
                                 <TableHead>Duration</TableHead>
                                 <TableHead className="text-right">Fee</TableHead>
@@ -299,18 +300,19 @@ function RenterDashboardContent() {
                         <TableBody>
                             {(isLoadingRentals || isLoadingStations) && (
                                 <TableRow>
-                                    <TableCell colSpan={6} className="h-24 text-center">Loading history...</TableCell>
+                                    <TableCell colSpan={7} className="h-24 text-center">Loading history...</TableCell>
                                 </TableRow>
                             )}
                             {!isLoadingRentals && !isLoadingStations && rentalHistory.length === 0 && (
                                 <TableRow>
-                                    <TableCell colSpan={6} className="h-24 text-center">No past rentals found.</TableCell>
+                                    <TableCell colSpan={7} className="h-24 text-center">No past rentals found.</TableCell>
                                 </TableRow>
                             )}
                             {!isLoadingRentals && !isLoadingStations && rentalHistory.map(rental => (
                                 <TableRow key={rental.id}>
                                     <TableCell>{formatBikeId(rental.ebikeId)}</TableCell>
                                     <TableCell>{getStationName(rental.stationId)}</TableCell>
+                                    <TableCell>{formatTimestamp(rental.startTime)}</TableCell>
                                     <TableCell>{formatTimestamp(rental.endTime)}</TableCell>
                                     <TableCell>{calculateDuration(rental.startTime, rental.endTime)}</TableCell>
                                     <TableCell className="text-right">₱{rental.rentalFee.toFixed(2)}</TableCell>
@@ -339,5 +341,3 @@ export default function RenterDashboard() {
         </FirebaseClientProvider>
     )
 }
-
-    
