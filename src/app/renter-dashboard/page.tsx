@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { Bike, Clock, DollarSign, Loader2, LogOut, User } from 'lucide-react';
+import { Bike, Clock, DollarSign, Loader2, LogOut, History } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useUser, useCollection, useFirestore, useMemoFirebase } from '@/firebase';
@@ -14,6 +14,16 @@ import { updateDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { doc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { RentBikeForm } from './rent-bike-form';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+
+
+const statusVariant = {
+    'active': 'default',
+    'completed': 'secondary',
+    'overdue': 'destructive',
+} as const;
+
 
 function RenterDashboardContent() {
   const { user, isUserLoading } = useUser();
@@ -22,18 +32,23 @@ function RenterDashboardContent() {
   const { toast } = useToast();
   const [isRentFormOpen, setIsRentFormOpen] = useState(false);
 
-  const rentalsCollection = useMemoFirebase(() => {
+  const rentalsQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
     return query(
         collection(firestore, 'rentals'), 
-        where('renterId', '==', user.uid), 
-        where('status', '==', 'active')
+        where('renterId', '==', user.uid)
     );
   }, [firestore, user]);
 
-  const { data: activeRentals, isLoading: isLoadingRentals } = useCollection<Rental>(rentalsCollection);
-  const activeRental = useMemo(() => (activeRentals && activeRentals.length > 0 ? activeRentals[0] : null), [activeRentals]);
-  
+  const { data: allRentals, isLoading: isLoadingRentals } = useCollection<Rental>(rentalsQuery);
+
+  const activeRental = useMemo(() => allRentals?.find(r => r.status === 'active') || null, [allRentals]);
+  const rentalHistory = useMemo(() => allRentals?.filter(r => r.status !== 'active').sort((a, b) => {
+    const timeA = a.endTime ? (a.endTime instanceof Timestamp ? a.endTime.toMillis() : new Date(a.endTime).getTime()) : 0;
+    const timeB = b.endTime ? (b.endTime instanceof Timestamp ? b.endTime.toMillis() : new Date(b.endTime).getTime()) : 0;
+    return timeB - timeA;
+  }) || [], [allRentals]);
+
   const [duration, setDuration] = useState("0h 0m");
   const [fee, setFee] = useState("0.00");
 
@@ -98,6 +113,27 @@ function RenterDashboardContent() {
     });
   }
 
+  const formatTimestamp = (timestamp: string | Timestamp | null) => {
+    if (!timestamp) return 'N/A';
+    if (timestamp instanceof Timestamp) {
+      return timestamp.toDate().toLocaleString();
+    }
+    return new Date(timestamp).toLocaleString();
+  }
+
+  const calculateDuration = (startTime: string | Timestamp, endTime: string | Timestamp | null) => {
+    if (!endTime) return 'N/A';
+
+    const start = startTime instanceof Timestamp ? startTime.toDate() : new Date(startTime);
+    const end = endTime instanceof Timestamp ? endTime.toDate() : new Date(endTime);
+
+    const durationMinutes = Math.floor((end.getTime() - start.getTime()) / (1000 * 60));
+    const hours = Math.floor(durationMinutes / 60);
+    const minutes = durationMinutes % 60;
+    
+    return `${hours}h ${minutes}m`;
+  }
+
   if (isUserLoading || !user) {
     return (
       <div className="flex min-h-screen w-full items-center justify-center bg-background">
@@ -114,13 +150,19 @@ function RenterDashboardContent() {
             <Bike className="h-6 w-6 text-primary" />
             <h1 className="text-xl font-bold font-headline">My Rental</h1>
         </div>
-        <Button variant="ghost" size="icon" onClick={() => router.push('/renter-login')}>
-            <LogOut className="h-5 w-5" />
-            <span className="sr-only">Log out</span>
-        </Button>
+        <div className="flex items-center gap-2">
+            <Button variant="ghost" size="icon" onClick={() => document.getElementById('history')?.scrollIntoView({ behavior: 'smooth' })}>
+                <History className="h-5 w-5" />
+                <span className="sr-only">History</span>
+            </Button>
+            <Button variant="ghost" size="icon" onClick={() => router.push('/renter-login')}>
+                <LogOut className="h-5 w-5" />
+                <span className="sr-only">Log out</span>
+            </Button>
+        </div>
        </header>
       <main className="flex-1 p-4 sm:p-6">
-        <div className="mx-auto max-w-2xl">
+        <div className="mx-auto max-w-2xl space-y-6">
             <Card className="w-full">
                 <CardHeader>
                     <CardTitle>Current Rental Status</CardTitle>
@@ -159,6 +201,49 @@ function RenterDashboardContent() {
                             <Button className="mt-4" onClick={() => setIsRentFormOpen(true)}>Rent a Bike</Button>
                         </div>
                     )}
+                </CardContent>
+            </Card>
+
+            <Card id="history">
+                <CardHeader>
+                    <CardTitle>Rental History</CardTitle>
+                    <CardDescription>A record of your past e-bike rentals.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Bike ID</TableHead>
+                                <TableHead>Ended</TableHead>
+                                <TableHead>Duration</TableHead>
+                                <TableHead className="text-right">Fee</TableHead>
+                                <TableHead>Status</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {isLoadingRentals && (
+                                <TableRow>
+                                    <TableCell colSpan={5} className="h-24 text-center">Loading history...</TableCell>
+                                </TableRow>
+                            )}
+                            {!isLoadingRentals && rentalHistory.length === 0 && (
+                                <TableRow>
+                                    <TableCell colSpan={5} className="h-24 text-center">No past rentals found.</TableCell>
+                                </TableRow>
+                            )}
+                            {!isLoadingRentals && rentalHistory.map(rental => (
+                                <TableRow key={rental.id}>
+                                    <TableCell>{formatBikeId(rental.ebikeId)}</TableCell>
+                                    <TableCell>{formatTimestamp(rental.endTime)}</TableCell>
+                                    <TableCell>{calculateDuration(rental.startTime, rental.endTime)}</TableCell>
+                                    <TableCell className="text-right">₱{rental.rentalFee.toFixed(2)}</TableCell>
+                                    <TableCell>
+                                        <Badge variant={statusVariant[rental.status.toLowerCase() as keyof typeof statusVariant]}>{rental.status}</Badge>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
                 </CardContent>
             </Card>
         </div>
