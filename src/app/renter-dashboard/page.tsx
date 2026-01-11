@@ -13,12 +13,14 @@ import { formatBikeId } from '@/lib/utils';
 import { updateDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { doc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
+import { RentBikeForm } from './rent-bike-form';
 
 function RenterDashboardContent() {
   const { user, isUserLoading } = useUser();
   const router = useRouter();
   const firestore = useFirestore();
   const { toast } = useToast();
+  const [isRentFormOpen, setIsRentFormOpen] = useState(false);
 
   const rentalsCollection = useMemoFirebase(() => {
     if (!firestore || !user) return null;
@@ -105,6 +107,7 @@ function RenterDashboardContent() {
   }
 
   return (
+    <>
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
        <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center justify-between gap-4 border-b bg-background/80 px-4 backdrop-blur-sm sm:px-6">
         <div className="flex items-center gap-2">
@@ -153,7 +156,7 @@ function RenterDashboardContent() {
                     {!isLoadingRentals && !activeRental && (
                         <div className="text-center text-muted-foreground py-8">
                             <p>You have no active rentals.</p>
-                            <Button className="mt-4">Rent a Bike</Button>
+                            <Button className="mt-4" onClick={() => setIsRentFormOpen(true)}>Rent a Bike</Button>
                         </div>
                     )}
                 </CardContent>
@@ -161,6 +164,8 @@ function RenterDashboardContent() {
         </div>
       </main>
     </div>
+     {user && <RentBikeForm isOpen={isRentFormOpen} onOpenChange={setIsRentFormOpen} userId={user.uid} />}
+    </>
   );
 }
 
