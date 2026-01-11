@@ -26,29 +26,39 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { stations as initialStations, Station } from "@/lib/data";
+import { Station } from "@/lib/types";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { useToast } from "@/hooks/use-toast";
 import React, { useState } from "react";
 import { AddStationForm } from "./add-station-form";
+import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
+import { collection } from "firebase/firestore";
+import { addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 
 export default function StationsPage() {
     const mapPlaceholder = PlaceHolderImages.find(img => img.id === 'map-placeholder');
     const { toast } = useToast();
-    const [stations, setStations] = useState<Station[]>(initialStations);
     const [isAddStationOpen, setIsAddStationOpen] = useState(false);
+    
+    const firestore = useFirestore();
+
+    const stationsCollection = useMemoFirebase(() => {
+      if (!firestore) return null;
+      return collection(firestore, 'stations');
+    }, [firestore]);
+
+    const { data: stations, isLoading } = useCollection<Station>(stationsCollection);
 
     const handleAddStation = (newStation: Omit<Station, 'id' | 'bikes'>) => {
-        const nextId = `STN${(parseInt(stations[stations.length - 1].id.replace('STN', '')) + 1).toString().padStart(3, '0')}`;
-        const newStationWithId: Station = {
+      if (!stationsCollection) return;
+        const newStationWithId: Omit<Station, 'id'> = {
             ...newStation,
-            id: nextId,
             bikes: 0,
         };
-        setStations(currentStations => [...currentStations, newStationWithId]);
+        addDocumentNonBlocking(stationsCollection, newStationWithId);
         toast({
             title: "Station Added",
-            description: `Station ${newStationWithId.name} has been successfully added.`,
+            description: `Station ${newStation.name} has been successfully added.`,
         });
         setIsAddStationOpen(false);
     };
@@ -101,7 +111,12 @@ export default function StationsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {stations.map((station) => (
+              {isLoading && (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center">Loading stations...</TableCell>
+                </TableRow>
+              )}
+              {!isLoading && stations?.map((station) => (
                 <TableRow key={station.id}>
                   <TableCell className="font-medium">{station.name}</TableCell>
                   <TableCell>{station.bikes}</TableCell>

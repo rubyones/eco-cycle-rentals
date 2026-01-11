@@ -28,7 +28,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { bikes as initialBikes, stations, Bike } from "@/lib/data";
+import { bikes as initialBikes, stations as initialStations, Bike } from "@/lib/data";
 import {
     Pagination,
     PaginationContent,
@@ -220,7 +220,7 @@ export default function BikesPage() {
         isOpen={isAddBikeOpen} 
         onOpenChange={setIsAddBikeOpen}
         onSubmit={handleAddBike}
-        stations={stations}
+        stations={initialStations}
     />
     </>
   );
