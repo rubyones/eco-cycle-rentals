@@ -138,7 +138,7 @@ function LoginPageContent() {
           </CardHeader>
           <CardContent>
             <TabsContent value="login">
-              <CardDescription className="text-center mb-4">Welcome back! Please sign in to your account.</CardDescription>
+              <CardDescription className="text-center mb-4 text-balance">Welcome back! Sign in to manage your rentals and get back on the road.</CardDescription>
               <form onSubmit={(e) => handleAuthAction(e, 'login')} className="grid gap-4">
                 <div className="grid gap-2">
                   <Label htmlFor="email-login">Email</Label>
@@ -176,7 +176,7 @@ function LoginPageContent() {
               </form>
             </TabsContent>
             <TabsContent value="signup">
-              <CardDescription className="text-center mb-4">Create an account to start renting.</CardDescription>
+              <CardDescription className="text-center mb-4 text-balance">Create an account to start your first eco-friendly ride with us.</CardDescription>
               <form onSubmit={(e) => handleAuthAction(e, 'signup')} className="grid gap-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="grid gap-2">

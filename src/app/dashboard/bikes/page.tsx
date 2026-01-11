@@ -76,7 +76,7 @@ export default function BikesPage() {
             setIsSeeding(true);
             const batch = writeBatch(firestore);
             
-            const initialBikes: Omit<Ebike, 'id' | 'image'>[] = [
+            const initialBikes: Omit<Ebike, 'id'>[] = [
                 { stationId: stations[0].id, batteryLevel: 95, status: 'Available', locked: false, lastMaintenanceDate: new Date().toISOString() },
                 { stationId: stations[0].id, batteryLevel: 82, status: 'Available', locked: false, lastMaintenanceDate: new Date().toISOString() },
                 { stationId: stations[1 % stations.length].id, batteryLevel: 100, status: 'In-Use', locked: false, lastMaintenanceDate: new Date().toISOString() },
@@ -84,7 +84,7 @@ export default function BikesPage() {
 
             initialBikes.forEach(bikeData => {
                 const docRef = doc(collection(firestore, 'ebikes'));
-                batch.set(docRef, bikeData);
+                batch.set(docRef, { ...bikeData, id: docRef.id });
             });
 
             await batch.commit();
@@ -99,16 +99,20 @@ export default function BikesPage() {
   }, [bikes, isLoadingBikes, stations, firestore, toast, isSeeding]);
 
 
-  const handleAddBike = (newBikeData: Omit<Ebike, 'id' | 'lastMaintenanceDate' | 'image'>) => {
+  const handleAddBike = (newBikeData: Omit<Ebike, 'id' | 'lastMaintenanceDate'>) => {
     if (!bikesCollection) return;
     
-    const newBike: Omit<Ebike, 'id' | 'image'> = {
+    const newBike: Omit<Ebike, 'id'> = {
       ...newBikeData,
       locked: newBikeData.status === 'Locked',
       lastMaintenanceDate: new Date().toISOString(),
     };
     
-    addDocumentNonBlocking(bikesCollection, newBike);
+    addDocumentNonBlocking(bikesCollection, newBike).then(docRef => {
+        if(docRef) {
+            updateDocumentNonBlocking(doc(bikesCollection, docRef.id), { id: docRef.id });
+        }
+    });
     
     toast({
         title: "E-Bike Added",
@@ -154,14 +158,14 @@ export default function BikesPage() {
     <>
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
-            <div>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex-1">
                 <CardTitle>E-Bike Management</CardTitle>
                 <CardDescription>
                 Register new e-bike units, modify existing records, and remotely lock/unlock e-bikes.
                 </CardDescription>
             </div>
-            <Button size="sm" className="gap-1" onClick={() => setIsAddBikeOpen(true)} disabled={isLoadingStations || !stations || stations.length === 0}>
+            <Button size="sm" className="gap-1 w-full sm:w-auto" onClick={() => setIsAddBikeOpen(true)} disabled={isLoadingStations || !stations || stations.length === 0}>
                 <PlusCircle className="h-3.5 w-3.5" />
                 <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
                 Add E-Bike
@@ -199,8 +203,8 @@ export default function BikesPage() {
               return (
               <TableRow key={bike.id}>
                  <TableCell className="hidden sm:table-cell">
-                    <div className="flex items-center justify-center h-16 w-16 bg-muted rounded-md">
-                        <Bike className="h-8 w-8 text-muted-foreground" />
+                    <div className="flex items-center justify-center h-12 w-12 bg-muted rounded-md">
+                        <Bike className="h-6 w-6 text-muted-foreground" />
                     </div>
                   </TableCell>
                 <TableCell className="font-medium">{formatBikeId(bike.id)}</TableCell>
@@ -208,7 +212,7 @@ export default function BikesPage() {
                   <Badge variant={statusVariant[bike.status as keyof typeof statusVariant]}>{bike.status}</Badge>
                 </TableCell>
                 <TableCell className="hidden md:table-cell">{bike.batteryLevel}%</TableCell>
-                <TableCell className="hidden md:table-cell">{station?.name || bike.stationId}</TableCell>
+                <TableCell className="hidden md:table-cell">{station?.name || 'Unknown'}</TableCell>
                 <TableCell>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -252,14 +256,6 @@ export default function BikesPage() {
             </PaginationItem>
             <PaginationItem>
               <PaginationLink href="#">1</PaginationLink>
-            </PaginationItem>
-            <PaginationItem>
-              <PaginationLink href="#" isActive>
-                2
-              </PaginationLink>
-            </PaginationItem>
-            <PaginationItem>
-              <PaginationLink href="#">3</PaginationLink>
             </PaginationItem>
             <PaginationItem>
               <PaginationNext href="#" />

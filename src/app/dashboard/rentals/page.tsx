@@ -28,7 +28,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Rental, Renter } from "@/lib/types";
-import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious, PaginationEllipsis } from "@/components/ui/pagination";
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { useToast } from "@/hooks/use-toast";
 import { useEffect, useState } from "react";
 import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
@@ -108,11 +108,11 @@ export default function RentalsPage() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Rental ID</TableHead>
+              <TableHead className="hidden sm:table-cell">Rental ID</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Renter</TableHead>
               <TableHead className="hidden md:table-cell">Bike ID</TableHead>
-              <TableHead className="hidden md:table-cell">Start Time</TableHead>
+              <TableHead className="hidden lg:table-cell">Start Time</TableHead>
               <TableHead className="text-right">Fee</TableHead>
               <TableHead>
                 <span className="sr-only">Actions</span>
@@ -129,13 +129,13 @@ export default function RentalsPage() {
             )}
             {!isLoading && rentalsWithRenters.map((rental) => (
               <TableRow key={rental.id}>
-                <TableCell className="font-medium">{rental.id}</TableCell>
+                <TableCell className="font-medium hidden sm:table-cell">{rental.id}</TableCell>
                 <TableCell>
                   <Badge variant={statusVariant[rental.status.toLowerCase() as keyof typeof statusVariant]}>{rental.status}</Badge>
                 </TableCell>
                 <TableCell>{rental.renter ? `${rental.renter.firstName} ${rental.renter.lastName}` : 'Unknown'}</TableCell>
                 <TableCell className="hidden md:table-cell">{formatBikeId(rental.ebikeId)}</TableCell>
-                <TableCell className="hidden md:table-cell">
+                <TableCell className="hidden lg:table-cell">
                   {formatTimestamp(rental.startTime)}
                 </TableCell>
                 <TableCell className="text-right">₱{(rental.rentalFee || 0).toFixed(2)}</TableCell>
@@ -172,11 +172,6 @@ export default function RentalsPage() {
             </PaginationItem>
             <PaginationItem>
               <PaginationLink href="#">1</PaginationLink>
-            </PaginationItem>
-            <PaginationItem>
-              <PaginationLink href="#" isActive>
-                2
-              </PaginationLink>
             </PaginationItem>
             <PaginationItem>
               <PaginationNext href="#" />

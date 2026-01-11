@@ -76,10 +76,10 @@ export function RentBikeForm({ isOpen, onOpenChange, userId }: RentBikeFormProps
         stationId: selectedBike.stationId,
     };
 
-    addDocumentNonBlocking(rentalCollection, newRental)
+    addDocumentNonBlocking(rentalCollection)
         .then((docRef) => {
             if(docRef){
-                 updateDocumentNonBlocking(doc(firestore, 'rentals', docRef.id), { id: docRef.id });
+                 updateDocumentNonBlocking(doc(firestore, 'rentals', docRef.id), { ...newRental, id: docRef.id });
             }
             updateDocumentNonBlocking(bikeRef, { status: 'In-Use' });
             toast({
@@ -120,7 +120,7 @@ export function RentBikeForm({ isOpen, onOpenChange, userId }: RentBikeFormProps
                     <TableRow>
                         <TableHead>Bike ID</TableHead>
                         <TableHead>Location</TableHead>
-                        <TableHead>Battery</TableHead>
+                        <TableHead className="hidden sm:table-cell">Battery</TableHead>
                         <TableHead></TableHead>
                     </TableRow>
                 </TableHeader>
@@ -140,7 +140,7 @@ export function RentBikeForm({ isOpen, onOpenChange, userId }: RentBikeFormProps
                         >
                             <TableCell>{formatBikeId(bike.id)}</TableCell>
                             <TableCell>{getStationName(bike.stationId)}</TableCell>
-                            <TableCell>{bike.batteryLevel}%</TableCell>
+                            <TableCell className="hidden sm:table-cell">{bike.batteryLevel}%</TableCell>
                             <TableCell className="text-right">
                                 <Button 
                                     size="sm" 

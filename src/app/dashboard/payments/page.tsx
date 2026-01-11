@@ -86,11 +86,11 @@ export default function PaymentsPage() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Payment ID</TableHead>
+              <TableHead className="hidden sm:table-cell">Payment ID</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Renter</TableHead>
               <TableHead className="hidden md:table-cell">Rental ID</TableHead>
-              <TableHead className="hidden md:table-cell">Date</TableHead>
+              <TableHead className="hidden lg:table-cell">Date</TableHead>
               <TableHead className="text-right">Amount</TableHead>
             </TableRow>
           </TableHeader>
@@ -104,13 +104,13 @@ export default function PaymentsPage() {
             )}
             {!isLoading && paymentsWithRenters.map((payment) => (
               <TableRow key={payment.id}>
-                <TableCell className="font-medium">{payment.id}</TableCell>
+                <TableCell className="font-medium hidden sm:table-cell">{payment.id}</TableCell>
                 <TableCell>
                   <Badge variant={statusVariant[payment.status.toLowerCase() as keyof typeof statusVariant]}>{payment.status}</Badge>
                 </TableCell>
                 <TableCell>{payment.renter ? `${payment.renter.firstName} ${payment.renter.lastName}` : 'Unknown'}</TableCell>
                 <TableCell className="hidden md:table-cell">{payment.rentalId}</TableCell>
-                <TableCell className="hidden md:table-cell">
+                <TableCell className="hidden lg:table-cell">
                   {formatTimestamp(payment.paymentDate)}
                 </TableCell>
                 <TableCell className="text-right">₱{(payment.amount || 0).toFixed(2)}</TableCell>

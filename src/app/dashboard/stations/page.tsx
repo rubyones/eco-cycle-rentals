@@ -33,7 +33,7 @@ import React, { useEffect, useState } from "react";
 import { AddStationForm } from "./add-station-form";
 import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
 import { collection, doc, writeBatch } from "firebase/firestore";
-import { addDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates";
+import { addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 
 const initialStations: Omit<Station, 'id'>[] = [
     { name: 'Davao City – SM Lanang area', latitude: 7.0931, longitude: 125.6128, parkingBays: 10 },
@@ -63,7 +63,7 @@ export default function StationsPage() {
                 const batch = writeBatch(firestore);
                 initialStations.forEach(stationData => {
                     const docRef = doc(collection(firestore, 'stations'));
-                    batch.set(docRef, stationData);
+                    batch.set(docRef, {...stationData, id: docRef.id});
                 });
                 await batch.commit();
                 toast({
@@ -79,7 +79,11 @@ export default function StationsPage() {
 
     const handleAddStation = (newStation: Omit<Station, 'id'>) => {
       if (!stationsCollection) return;
-        addDocumentNonBlocking(stationsCollection, newStation);
+        addDocumentNonBlocking(stationsCollection, newStation).then(docRef => {
+            if (docRef) {
+                updateDocumentNonBlocking(doc(stationsCollection, docRef.id), { id: docRef.id });
+            }
+        });
         toast({
             title: "Station Added",
             description: `Station ${newStation.name} has been successfully added.`,
@@ -114,17 +118,17 @@ export default function StationsPage() {
 
   return (
     <>
-    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
-      <Card className="lg:col-span-4">
+    <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-7">
+      <Card className="lg:col-span-7 xl:col-span-4">
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex-1">
               <CardTitle>Station Management</CardTitle>
               <CardDescription>
                 Add or update station information and monitor e-bike distribution.
               </CardDescription>
             </div>
-            <Button size="sm" className="gap-1" onClick={() => setIsAddStationOpen(true)}>
+            <Button size="sm" className="gap-1 w-full sm:w-auto" onClick={() => setIsAddStationOpen(true)}>
               <PlusCircle className="h-3.5 w-3.5" />
               <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
                 Add Station
@@ -182,14 +186,14 @@ export default function StationsPage() {
           </Table>
         </CardContent>
       </Card>
-      <Card className="lg:col-span-3">
+      <Card className="lg:col-span-7 xl:col-span-3">
           <CardHeader>
               <CardTitle>Station Map</CardTitle>
               <CardDescription>Visual overview of station locations.</CardDescription>
           </CardHeader>
           <CardContent>
             {mapPlaceholder && (
-                <div className="relative aspect-[4/3] w-full">
+                <div className="relative aspect-video w-full">
                      <Image
                         src={mapPlaceholder.imageUrl}
                         alt={mapPlaceholder.description}
