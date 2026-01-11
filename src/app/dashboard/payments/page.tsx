@@ -30,6 +30,7 @@ import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
 import { collection, Timestamp } from "firebase/firestore";
 import { Payment, Renter } from "@/lib/types";
 import { useEffect, useState } from "react";
+import { formatRentalId } from "@/lib/utils";
 
 const statusVariant = {
     'paid': 'secondary',
@@ -109,7 +110,7 @@ export default function PaymentsPage() {
                   <Badge variant={statusVariant[payment.status.toLowerCase() as keyof typeof statusVariant]}>{payment.status}</Badge>
                 </TableCell>
                 <TableCell>{payment.renter ? `${payment.renter.firstName} ${payment.renter.lastName}` : 'Unknown'}</TableCell>
-                <TableCell className="hidden md:table-cell">{payment.rentalId}</TableCell>
+                <TableCell className="hidden md:table-cell">{formatRentalId(payment.rentalId)}</TableCell>
                 <TableCell className="hidden lg:table-cell">
                   {formatTimestamp(payment.paymentDate)}
                 </TableCell>

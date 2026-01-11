@@ -33,7 +33,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useEffect, useState } from "react";
 import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
 import { collection, doc, Timestamp } from "firebase/firestore";
-import { formatBikeId } from "@/lib/utils";
+import { formatBikeId, formatRentalId } from "@/lib/utils";
 
 const statusVariant = {
     'active': 'default',
@@ -129,7 +129,7 @@ export default function RentalsPage() {
             )}
             {!isLoading && rentalsWithRenters.map((rental) => (
               <TableRow key={rental.id}>
-                <TableCell className="font-medium hidden sm:table-cell">{rental.id}</TableCell>
+                <TableCell className="font-medium hidden sm:table-cell">{formatRentalId(rental.id)}</TableCell>
                 <TableCell>
                   <Badge variant={statusVariant[rental.status.toLowerCase() as keyof typeof statusVariant]}>{rental.status}</Badge>
                 </TableCell>
