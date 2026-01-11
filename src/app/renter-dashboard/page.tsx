@@ -37,7 +37,7 @@ function RenterDashboardContent() {
 
   useEffect(() => {
     if (!isUserLoading && !user) {
-      router.push('/');
+      router.push('/renter-login');
     }
   }, [user, isUserLoading, router]);
 
@@ -111,7 +111,7 @@ function RenterDashboardContent() {
             <Bike className="h-6 w-6 text-primary" />
             <h1 className="text-xl font-bold font-headline">My Rental</h1>
         </div>
-        <Button variant="ghost" size="icon" onClick={() => router.push('/')}>
+        <Button variant="ghost" size="icon" onClick={() => router.push('/renter-login')}>
             <LogOut className="h-5 w-5" />
             <span className="sr-only">Log out</span>
         </Button>
