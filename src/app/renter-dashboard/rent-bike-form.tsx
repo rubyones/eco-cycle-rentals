@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -12,12 +13,12 @@ import {
 import { Button } from '@/components/ui/button';
 import { Ebike, Station, Rental } from '@/lib/types';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, Timestamp } from 'firebase/firestore';
+import { collection } from 'firebase/firestore';
 import { useState, useMemo } from 'react';
 import { addDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { doc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Bike } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { formatBikeId } from '@/lib/utils';
 import {
     Table,
@@ -72,6 +73,7 @@ export function RentBikeForm({ isOpen, onOpenChange, userId }: RentBikeFormProps
         endTime: null,
         status: 'active',
         rentalFee: 0,
+        stationId: selectedBike.stationId,
     };
 
     addDocumentNonBlocking(rentalCollection, newRental)

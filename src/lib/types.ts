@@ -36,6 +36,7 @@ export type Rental = {
   endTime: string | Timestamp | null;
   rentalFee: number;
   status: 'active' | 'completed' | 'overdue' | 'paid';
+  stationId: string;
 };
 
 export type Payment = {

@@ -141,6 +141,10 @@
           "type": "string",
           "description": "Reference to Ebike. The e-bike being rented. (Relationship: Ebike 1:N Rental)"
         },
+        "stationId": {
+            "type": "string",
+            "description": "Reference to Station. The station where the rental started."
+        },
         "startTime": {
           "type": "string",
           "description": "The date and time when the rental started.",
@@ -167,6 +171,7 @@
         "id",
         "renterId",
         "ebikeId",
+        "stationId",
         "startTime",
         "rentalFee",
         "status"
@@ -354,5 +359,3 @@
     }
   }
 }
-
-    

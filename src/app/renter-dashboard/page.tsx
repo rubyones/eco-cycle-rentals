@@ -3,13 +3,13 @@
 
 import { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { Bike, Clock, DollarSign, Loader2, LogOut, History, CreditCard } from 'lucide-react';
+import { Bike, Clock, DollarSign, Loader2, LogOut, History, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useUser, useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { collection, query, where, Timestamp } from 'firebase/firestore';
-import { Rental, Payment } from '@/lib/types';
+import { Rental, Payment, Station } from '@/lib/types';
 import { formatBikeId } from '@/lib/utils';
 import { addDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { doc } from 'firebase/firestore';
@@ -41,8 +41,15 @@ function RenterDashboardContent() {
         where('renterId', '==', user.uid)
     );
   }, [firestore, user]);
+  
+  const stationsCollection = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return collection(firestore, 'stations');
+  }, [firestore]);
+
 
   const { data: allRentals, isLoading: isLoadingRentals } = useCollection<Rental>(rentalsQuery);
+  const { data: stations, isLoading: isLoadingStations } = useCollection<Station>(stationsCollection);
 
   const activeRental = useMemo(() => allRentals?.find(r => r.status === 'active') || null, [allRentals]);
   const rentalHistory = useMemo(() => allRentals?.filter(r => r.status !== 'active').sort((a, b) => {
@@ -51,8 +58,9 @@ function RenterDashboardContent() {
     return timeB - timeA;
   }) || [], [allRentals]);
 
-  const [duration, setDuration] = useState("0h 0m");
+  const [duration, setDuration] = useState("0h 0m 0s");
   const [fee, setFee] = useState("0.00");
+  const [startStation, setStartStation] = useState<Station | null>(null);
 
   useEffect(() => {
     if (!isUserLoading && !user) {
@@ -63,16 +71,28 @@ function RenterDashboardContent() {
   useEffect(() => {
     if (!activeRental) return;
 
+    const getStartStation = () => {
+        if(stations && activeRental) {
+            const bikeStartStation = stations.find(s => s.id === activeRental.stationId);
+            if(bikeStartStation) {
+                setStartStation(bikeStartStation);
+            }
+        }
+    }
+    
     const calculateRentalInfo = () => {
         const startTime = activeRental.startTime instanceof Timestamp 
             ? activeRental.startTime.toDate() 
             : new Date(activeRental.startTime as string);
         
         const now = new Date();
-        const durationMinutes = Math.floor((now.getTime() - startTime.getTime()) / (1000 * 60));
-        const hours = Math.floor(durationMinutes / 60);
-        const minutes = durationMinutes % 60;
+        const durationSeconds = Math.floor((now.getTime() - startTime.getTime()) / 1000);
+        const hours = Math.floor(durationSeconds / 3600);
+        const minutes = Math.floor((durationSeconds % 3600) / 60);
+        const seconds = durationSeconds % 60;
         
+        const durationMinutes = Math.floor(durationSeconds / 60);
+
         let currentFee = 0;
         if (durationMinutes <= 60) {
             currentFee = 120;
@@ -82,15 +102,16 @@ function RenterDashboardContent() {
         }
 
 
-        setDuration(`${hours}h ${minutes}m`);
+        setDuration(`${hours}h ${minutes}m ${seconds}s`);
         setFee(currentFee.toFixed(2));
     };
-
+    
+    getStartStation();
     calculateRentalInfo(); // Initial calculation
-    const interval = setInterval(calculateRentalInfo, 60000); // Update every minute
+    const interval = setInterval(calculateRentalInfo, 1000); // Update every second
 
     return () => clearInterval(interval);
-  }, [activeRental]);
+  }, [activeRental, stations]);
 
   const handleEndRental = () => {
     if (!firestore || !activeRental || !user) return;
@@ -197,18 +218,27 @@ function RenterDashboardContent() {
                     {activeRental && <CardDescription>You have an active rental. Please return the e-bike to the nearest station when finished.</CardDescription>}
                 </CardHeader>
                 <CardContent className="grid gap-6">
-                    {isLoadingRentals && <div className="flex items-center justify-center"><Loader2 className="h-6 w-6 animate-spin"/></div>}
+                    {(isLoadingRentals || isLoadingStations) && <div className="flex items-center justify-center"><Loader2 className="h-6 w-6 animate-spin"/></div>}
                     {!isLoadingRentals && activeRental && (
                       <>
                         <div className="flex items-center justify-between">
                             <span className="text-muted-foreground">E-Bike ID</span>
                             <span className="font-semibold">{formatBikeId(activeRental.ebikeId)}</span>
                         </div>
+                        {startStation && (
+                            <div className="flex items-center justify-between">
+                                <span className="text-muted-foreground">Start Station</span>
+                                 <div className="flex items-center gap-2">
+                                    <MapPin className="h-4 w-4" />
+                                    <span className="font-semibold">{startStation.name}</span>
+                                </div>
+                            </div>
+                        )}
                         <div className="flex items-center justify-between">
                             <span className="text-muted-foreground">Rental Duration</span>
                             <div className="flex items-center gap-2">
                                 <Clock className="h-4 w-4" />
-                                <span className="font-semibold">{duration}</span>
+                                <span className="font-semibold tabular-nums">{duration}</span>
                             </div>
                         </div>
                         <div className="flex items-center justify-between">
