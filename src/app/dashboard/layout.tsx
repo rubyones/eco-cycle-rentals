@@ -15,6 +15,9 @@ import {
   SidebarContent,
   SidebarFooter,
   SidebarInset,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton,
 } from "@/components/ui/sidebar"
 import { DashboardHeader } from "@/components/dashboard-header"
 import { NavLinks } from "./nav-links"
