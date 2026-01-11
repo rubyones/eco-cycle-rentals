@@ -26,9 +26,9 @@ function LoginPageContent() {
   const [isSigningIn, setIsSigningIn] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [firstName, setFirstName] = useState('Sample');
-  const [lastName, setLastName] = useState('Renter');
-  const [phone, setPhone] = useState('555-555-5555');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [phone, setPhone] = useState('');
   const { toast } = useToast();
 
 
