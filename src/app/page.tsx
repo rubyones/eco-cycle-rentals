@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { Bike, Loader2, Mail, Lock } from 'lucide-react';
+import { Bike, Loader2, Mail, Lock, User as UserIcon, Phone } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -26,9 +26,9 @@ function LoginPageContent() {
   const [isSigningIn, setIsSigningIn] = useState(false);
   const [email, setEmail] = useState('sample.renter@example.com');
   const [password, setPassword] = useState('password123');
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [phone, setPhone] = useState('');
+  const [firstName, setFirstName] = useState('Sample');
+  const [lastName, setLastName] = useState('Renter');
+  const [phone, setPhone] = useState('555-555-5555');
   const { toast } = useToast();
 
 
@@ -53,8 +53,16 @@ function LoginPageContent() {
       if (action === 'login') {
         initiateEmailSignIn(auth, email, password);
       } else {
-        // Here you would also handle creating the renter document in Firestore upon successful signup
-        initiateEmailSignUp(auth, email, password);
+        if (!firstName || !lastName || !phone) {
+           toast({
+            title: "Missing Information",
+            description: "Please fill out all fields to sign up.",
+            variant: "destructive",
+          });
+          setIsSigningIn(false);
+          return;
+        }
+        initiateEmailSignUp(auth, email, password, { firstName, lastName, phone });
       }
     }
   };
@@ -131,24 +139,39 @@ function LoginPageContent() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
                   <Label htmlFor="first-name">First name</Label>
-                  <Input id="first-name" placeholder="Max" required onChange={(e) => setFirstName(e.target.value)} />
+                   <div className="relative">
+                     <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input id="first-name" placeholder="Max" required value={firstName} onChange={(e) => setFirstName(e.target.value)} className="pl-10" />
+                  </div>
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="last-name">Last name</Label>
-                  <Input id="last-name" placeholder="Robinson" required onChange={(e) => setLastName(e.target.value)} />
+                   <div className="relative">
+                     <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input id="last-name" placeholder="Robinson" required value={lastName} onChange={(e) => setLastName(e.target.value)} className="pl-10" />
+                  </div>
                 </div>
               </div>
                <div className="grid gap-2">
                 <Label htmlFor="email-signup">Email</Label>
-                <Input id="email-signup" type="email" placeholder="m@example.com" required value={email} onChange={(e) => setEmail(e.target.value)} />
+                 <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input id="email-signup" type="email" placeholder="m@example.com" required value={email} onChange={(e) => setEmail(e.target.value)} className="pl-10" />
+                </div>
               </div>
                <div className="grid gap-2">
                 <Label htmlFor="phone">Phone Number</Label>
-                <Input id="phone" type="tel" placeholder="+639171234567" required onChange={(e) => setPhone(e.target.value)} />
+                <div className="relative">
+                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input id="phone" type="tel" placeholder="+639171234567" required value={phone} onChange={(e) => setPhone(e.target.value)} className="pl-10" />
+                </div>
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="password-signup">Password</Label>
-                <Input id="password-signup" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} />
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input id="password-signup" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} className="pl-10" />
+                </div>
               </div>
               <Button type="submit" className="w-full" disabled={isSigningIn}>
                 {isSigningIn ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Create account'}

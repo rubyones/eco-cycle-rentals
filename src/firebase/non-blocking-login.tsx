@@ -25,6 +25,8 @@ export function initiateEmailSignUp(authInstance: Auth, email: string, password:
       const { firestore } = getSdks(authInstance.app);
       const user = userCredential.user;
       
+      const displayName = extraData?.firstName && extraData?.lastName ? `${extraData.firstName} ${extraData.lastName}` : 'New User';
+
       // Create renter document in Firestore
       const renterRef = doc(firestore, 'renters', user.uid);
       const renterData = {
@@ -36,7 +38,8 @@ export function initiateEmailSignUp(authInstance: Auth, email: string, password:
       };
       
       // Update profile and set document non-blockingly
-      updateProfile(user, { displayName: `${extraData?.firstName} ${extraData?.lastName}` });
+      updateProfile(user, { displayName: displayName });
+
       setDoc(renterRef, renterData, { merge: true }).catch(error => {
          errorEmitter.emit('permission-error', new FirestorePermissionError({
             path: renterRef.path,
