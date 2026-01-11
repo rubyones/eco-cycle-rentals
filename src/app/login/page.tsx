@@ -87,7 +87,9 @@ function AdminLoginPageContent() {
             <Bike className="h-6 w-6" />
           </div>
           <CardTitle className="text-3xl font-headline">EcoCycle Rentals</CardTitle>
-          <CardDescription>Login to manage the e-bike fleet.</CardDescription>
+          <CardDescription>
+            Welcome to the Admin Panel. Log in to manage the e-bike fleet, monitor rentals, and view system analytics.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleLogin} className="grid gap-4">
