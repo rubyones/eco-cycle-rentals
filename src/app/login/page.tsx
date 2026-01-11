@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { Bike, Loader2 } from 'lucide-react';
+import { Bike, Loader2, Mail, Lock } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -22,6 +22,8 @@ function AdminLoginPageContent() {
   const auth = useAuth();
   const { user, isUserLoading } = useUser();
   const [isSigningIn, setIsSigningIn] = useState(false);
+  const [email, setEmail] = useState('admin@ebike.com');
+  const [password, setPassword] = useState('password123');
 
   useEffect(() => {
     // If user object exists and is no longer loading, redirect to dashboard
@@ -30,7 +32,8 @@ function AdminLoginPageContent() {
     }
   }, [user, isUserLoading, router]);
 
-  const handleLogin = () => {
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
     if (auth) {
       setIsSigningIn(true);
       initiateAnonymousSignIn(auth);
@@ -60,37 +63,43 @@ function AdminLoginPageContent() {
           <CardDescription>Login to manage the e-bike fleet.</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4">
+          <form onSubmit={handleLogin} className="grid gap-4">
             <div className="grid gap-2">
               <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="m@example.com"
-                required
-                defaultValue="admin@ebike.com"
-                disabled
-              />
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="m@example.com"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
             </div>
             <div className="grid gap-2">
               <div className="flex items-center">
                 <Label htmlFor="password">Password</Label>
               </div>
-              <Input
-                id="password"
-                type="password"
-                required
-                defaultValue="••••••••"
-                disabled
-              />
+              <div className="relative">
+                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="password"
+                  type="password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="pl-10"
+                  placeholder="••••••••"
+                />
+              </div>
             </div>
-            <Button onClick={handleLogin} className="w-full" disabled={isSigningIn}>
+            <Button type="submit" className="w-full" disabled={isSigningIn}>
               Continue as Admin
             </Button>
-            <p className="px-1 text-xs text-center text-muted-foreground">
-                This is an anonymous login for demonstration purposes.
-            </p>
-          </div>
+          </form>
         </CardContent>
       </Card>
     </div>
