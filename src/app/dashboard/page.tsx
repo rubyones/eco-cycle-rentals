@@ -29,6 +29,7 @@ import { collection, doc, getDoc, Timestamp } from "firebase/firestore";
 import { Ebike, Rental, Renter } from "@/lib/types";
 import { useEffect, useState } from "react";
 import { useUser } from "@/firebase/provider";
+import { formatBikeId } from "@/lib/utils";
 
 const chartData = [
   { month: "January", revenue: 93000 },
@@ -96,7 +97,7 @@ export default function Dashboard() {
 
   const totalRenters = 0; // This is not available due to security rules
   const totalBikes = bikes?.length || 0;
-  const activeRentals = rentals?.filter(r => r.status === 'Active').length || 0;
+  const activeRentals = rentals?.filter(r => r.status === 'active').length || 0;
   const totalRevenue = rentals?.reduce((acc, r) => acc + (r.rentalFee || 0), 0) || 0;
 
   const isLoading = isLoadingBikes || isLoadingRentals;
@@ -195,7 +196,7 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent className="grid gap-8">
             {isLoadingRecent && <p className="text-sm text-center text-muted-foreground">Loading recent rentals...</p>}
-            {!isLoadingRecent && recentRentals.map((rental) => {
+            {!isLoadingRecent && recentRentals.map((rental, index) => {
                 const renterName = rental.renter ? `${rental.renter.firstName} ${rental.renter.lastName}` : 'Unknown Renter';
                 const renterInitials = rental.renter ? `${rental.renter.firstName[0]}${rental.renter.lastName[0]}` : 'UR';
 
@@ -208,7 +209,7 @@ export default function Dashboard() {
                         </Avatar>
                         <div className="grid gap-1">
                             <p className="text-sm font-medium leading-none">{renterName}</p>
-                            <p className="text-sm text-muted-foreground">Bike ID: {rental.ebikeId}</p>
+                            <p className="text-sm text-muted-foreground">Bike ID: {formatBikeId(rental.ebikeId, index)}</p>
                         </div>
                         <div className="ml-auto font-medium">₱{(rental.rentalFee || 0).toFixed(2)}</div>
                     </div>

@@ -33,6 +33,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useEffect, useState } from "react";
 import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
 import { collection, doc, getDoc, Timestamp } from "firebase/firestore";
+import { formatBikeId } from "@/lib/utils";
 
 const statusVariant = {
     'active': 'default',
@@ -133,14 +134,14 @@ export default function RentalsPage() {
                 </TableCell>
               </TableRow>
             )}
-            {!isLoading && rentalsWithRenters.map((rental) => (
+            {!isLoading && rentalsWithRenters.map((rental, index) => (
               <TableRow key={rental.id}>
                 <TableCell className="font-medium">{rental.id}</TableCell>
                 <TableCell>
                   <Badge variant={statusVariant[rental.status.toLowerCase() as keyof typeof statusVariant]}>{rental.status}</Badge>
                 </TableCell>
                 <TableCell>{rental.renter ? `${rental.renter.firstName} ${rental.renter.lastName}` : 'Unknown'}</TableCell>
-                <TableCell className="hidden md:table-cell">{rental.ebikeId}</TableCell>
+                <TableCell className="hidden md:table-cell">{formatBikeId(rental.ebikeId, index)}</TableCell>
                 <TableCell className="hidden md:table-cell">
                   {formatTimestamp(rental.startTime)}
                 </TableCell>

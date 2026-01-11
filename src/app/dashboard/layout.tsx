@@ -3,7 +3,7 @@
 
 import Link from "next/link"
 import {
-  Bike,
+  CircuitBoard,
   LogOut,
   Loader2,
 } from "lucide-react"
@@ -43,7 +43,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
           <SidebarHeader>
             <div className="flex items-center gap-2 p-2">
               <div className="inline-block rounded-lg bg-sidebar-accent p-2 text-sidebar-accent-foreground">
-                <Bike className="h-6 w-6" />
+                <CircuitBoard className="h-6 w-6" />
               </div>
               <h2 className="text-xl font-bold tracking-tight font-headline">
                 eBike Manager

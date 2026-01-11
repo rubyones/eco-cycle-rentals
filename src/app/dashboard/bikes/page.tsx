@@ -44,6 +44,7 @@ import { AddBikeForm } from "./add-bike-form";
 import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
 import { collection, doc, writeBatch } from "firebase/firestore";
 import { addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking } from "@/firebase/non-blocking-updates";
+import { formatBikeId } from "@/lib/utils";
 
 const statusVariant = {
     'Available': 'secondary',
@@ -124,7 +125,7 @@ export default function BikesPage() {
 
   const handleEdit = (bikeId: string) => {
     toast({
-        title: `Editing ${bikeId}`,
+        title: `Editing ${formatBikeId(bikeId)}`,
         description: "This feature is not yet implemented.",
     });
   };
@@ -138,7 +139,7 @@ export default function BikesPage() {
     updateDocumentNonBlocking(bikeRef, { status: newStatus, locked: newLockedState });
 
     toast({
-      title: `Bike ${bike.id} ${newStatus}`,
+      title: `Bike ${formatBikeId(bike.id)} ${newStatus}`,
       description: `The bike has been successfully ${newStatus.toLowerCase()}.`,
     });
   };
@@ -149,7 +150,7 @@ export default function BikesPage() {
     deleteDocumentNonBlocking(bikeRef);
     toast({
         title: `Bike Deleted`,
-        description: `Bike ${bikeId} has been successfully deleted.`,
+        description: `Bike ${formatBikeId(bikeId)} has been successfully deleted.`,
         variant: "destructive"
     });
   }
@@ -199,7 +200,7 @@ export default function BikesPage() {
                     <TableCell colSpan={6} className="text-center h-24">Loading bikes...</TableCell>
                 </TableRow>
             )}
-            {!isLoadingBikes && !isSeeding && bikes?.map((bike) => {
+            {!isLoadingBikes && !isSeeding && bikes?.map((bike, index) => {
               const image = PlaceHolderImages.find(p => p.id === bike.image);
               const station = stations?.find(s => s.id === bike.stationId);
               return (
@@ -216,7 +217,7 @@ export default function BikesPage() {
                       />
                     )}
                   </TableCell>
-                <TableCell className="font-medium">{bike.id}</TableCell>
+                <TableCell className="font-medium">{formatBikeId(bike.id, index)}</TableCell>
                 <TableCell>
                   <Badge variant={statusVariant[bike.status]}>{bike.status}</Badge>
                 </TableCell>
