@@ -38,12 +38,12 @@ import Link from "next/link";
 import { renters, bikes, rentals } from "@/lib/data";
 
 const chartData = [
-  { month: "January", revenue: 1860 },
-  { month: "February", revenue: 3050 },
-  { month: "March", revenue: 2370 },
-  { month: "April", revenue: 730 },
-  { month: "May", revenue: 2090 },
-  { month: "June", revenue: 2140 },
+  { month: "January", revenue: 93000 },
+  { month: "February", revenue: 152500 },
+  { month: "March", revenue: 118500 },
+  { month: "April", revenue: 36500 },
+  { month: "May", revenue: 104500 },
+  { month: "June", revenue: 107000 },
 ];
 const chartConfig = {
   revenue: {
@@ -64,10 +64,10 @@ export default function Dashboard() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
+            <span className="text-muted-foreground">₱</span>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${totalRevenue.toLocaleString()}</div>
+            <div className="text-2xl font-bold">₱{totalRevenue.toLocaleString()}</div>
             <p className="text-xs text-muted-foreground">+20.1% from last month</p>
           </CardContent>
         </Card>
@@ -124,7 +124,7 @@ export default function Dashboard() {
                   tickLine={false}
                   axisLine={false}
                   tickMargin={8}
-                  tickFormatter={(value) => `$${value / 1000}k`}
+                  tickFormatter={(value) => `₱${value / 1000}k`}
                 />
                 <ChartTooltip
                   cursor={false}
@@ -162,7 +162,7 @@ export default function Dashboard() {
                         <p className="text-sm font-medium leading-none">{rental.renterName}</p>
                         <p className="text-sm text-muted-foreground">Bike ID: {rental.bikeId}</p>
                     </div>
-                    <div className="ml-auto font-medium">${rental.fee.toFixed(2)}</div>
+                    <div className="ml-auto font-medium">₱{rental.fee.toFixed(2)}</div>
                 </div>
             ))}
           </CardContent>

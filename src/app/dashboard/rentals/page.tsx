@@ -69,7 +69,7 @@ export default function RentalsPage() {
                 <TableCell className="hidden md:table-cell">
                   {new Date(rental.startTime).toLocaleString()}
                 </TableCell>
-                <TableCell className="text-right">${rental.fee.toFixed(2)}</TableCell>
+                <TableCell className="text-right">₱{rental.fee.toFixed(2)}</TableCell>
                 <TableCell>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>

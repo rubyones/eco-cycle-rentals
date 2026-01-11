@@ -1,10 +1,10 @@
 import type { Renter, Bike, Station, Rental, NotificationSetting } from './types';
 
 export const renters: Renter[] = [
-  { id: 'USR001', name: 'Alice Johnson', email: 'alice@example.com', avatar: 'user-avatar-1', status: 'Active', rentalStatus: 'Renting', rentalHistoryCount: 12, joinDate: '2023-01-15' },
-  { id: 'USR002', name: 'Bob Williams', email: 'bob@example.com', avatar: 'user-avatar-2', status: 'Active', rentalStatus: 'Idle', rentalHistoryCount: 5, joinDate: '2023-03-22' },
-  { id: 'USR003', name: 'Charlie Brown', email: 'charlie@example.com', avatar: 'user-avatar-3', status: 'Suspended', rentalStatus: 'Idle', rentalHistoryCount: 23, joinDate: '2022-11-30' },
-  { id: 'USR004', name: 'Diana Miller', email: 'diana@example.com', avatar: 'user-avatar-4', status: 'Active', rentalStatus: 'Idle', rentalHistoryCount: 8, joinDate: '2023-05-10' },
+  { id: 'USR001', name: 'John Paul Mendoza', email: 'jp@example.com', avatar: 'user-avatar-1', status: 'Active', rentalStatus: 'Renting', rentalHistoryCount: 12, joinDate: '2023-01-15' },
+  { id: 'USR002', name: 'Anne Christine Lopez', email: 'anne@example.com', avatar: 'user-avatar-2', status: 'Active', rentalStatus: 'Idle', rentalHistoryCount: 5, joinDate: '2023-03-22' },
+  { id: 'USR003', name: 'Carlo Miguel Garcia', email: 'carlo@example.com', avatar: 'user-avatar-3', status: 'Suspended', rentalStatus: 'Idle', rentalHistoryCount: 23, joinDate: '2022-11-30' },
+  { id: 'USR004', name: 'Daniel Cruz', email: 'daniel@example.com', avatar: 'user-avatar-4', status: 'Active', rentalStatus: 'Idle', rentalHistoryCount: 8, joinDate: '2023-05-10' },
 ];
 
 export const bikes: Bike[] = [
@@ -25,10 +25,10 @@ export const stations: Station[] = [
 ];
 
 export const rentals: Rental[] = [
-  { id: 'RNT001', bikeId: 'EBK002', renterName: 'Alice Johnson', startTime: '2024-05-21T10:00:00Z', endTime: null, fee: 5.50, status: 'Active' },
-  { id: 'RNT002', bikeId: 'EBK003', renterName: 'Bob Williams', startTime: '2024-05-20T14:30:00Z', endTime: '2024-05-20T15:30:00Z', fee: 4.00, status: 'Completed' },
-  { id: 'RNT003', bikeId: 'EBK004', renterName: 'Diana Miller', startTime: '2024-05-19T08:00:00Z', endTime: '2024-05-19T12:00:00Z', fee: 12.00, status: 'Overdue' },
-  { id: 'RNT004', bikeId: 'EBK001', renterName: 'Alice Johnson', startTime: '2024-05-21T11:00:00Z', endTime: '2024-05-21T11:30:00Z', fee: 2.50, status: 'Completed' },
+  { id: 'RNT001', bikeId: 'EBK002', renterName: 'John Paul Mendoza', startTime: '2024-05-21T10:00:00Z', endTime: null, fee: 275.00, status: 'Active' },
+  { id: 'RNT002', bikeId: 'EBK003', renterName: 'Anne Christine Lopez', startTime: '2024-05-20T14:30:00Z', endTime: '2024-05-20T15:30:00Z', fee: 200.00, status: 'Completed' },
+  { id: 'RNT003', bikeId: 'EBK004', renterName: 'Daniel Cruz', startTime: '2024-05-19T08:00:00Z', endTime: '2024-05-19T12:00:00Z', fee: 600.00, status: 'Overdue' },
+  { id: 'RNT004', bikeId: 'EBK001', renterName: 'John Paul Mendoza', startTime: '2024-05-21T11:00:00Z', endTime: '2024-05-21T11:30:00Z', fee: 125.00, status: 'Completed' },
 ];
 
 export const notificationSettings: NotificationSetting[] = [
