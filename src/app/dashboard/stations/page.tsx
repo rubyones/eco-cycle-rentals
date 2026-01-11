@@ -44,6 +44,7 @@ const initialStations: Omit<Station, 'id'>[] = [
     { name: 'Victoria Plaza', latitude: 7.0748, longitude: 125.6105, parkingBays: 20 },
     { name: 'SM City Toril', latitude: 6.9845, longitude: 125.6253, parkingBays: 10 },
     { name: 'NCCC Mall Davao (Main)', latitude: 7.0690, longitude: 125.6090, parkingBays: 15 },
+    { name: 'Davao City – SM Lanang area', latitude: 7.0731, longitude: 125.6128, parkingBays: 10 },
 ];
 
 export default function StationsPage() {
