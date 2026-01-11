@@ -1,17 +1,14 @@
+
 'use client';
 
 import {
   Activity,
   ArrowUpRight,
   Bike,
-  DollarSign,
   Users,
-  CreditCard,
-  ListOrdered,
 } from "lucide-react";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -21,21 +18,15 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis } from "recharts";
 import Link from "next/link";
-import { renters, bikes, rentals } from "@/lib/data";
+import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
+import { collection } from "firebase/firestore";
+import { Ebike, Rental, Renter } from "@/lib/types";
 
 const chartData = [
   { month: "January", revenue: 93000 },
@@ -52,12 +43,23 @@ const chartConfig = {
   },
 };
 
-const totalRenters = renters.length;
-const totalBikes = bikes.length;
-const activeRentals = rentals.filter(r => r.status === 'Active').length;
-const totalRevenue = rentals.reduce((acc, r) => acc + r.fee, 0);
-
 export default function Dashboard() {
+  const firestore = useFirestore();
+
+  const rentersCollection = useMemoFirebase(() => firestore ? collection(firestore, 'renters') : null, [firestore]);
+  const bikesCollection = useMemoFirebase(() => firestore ? collection(firestore, 'ebikes') : null, [firestore]);
+  // Assuming rentals are stored under a single top-level collection for this dashboard view
+  const rentalsCollection = useMemoFirebase(() => firestore ? collection(firestore, 'rentals') : null, [firestore]);
+
+  const { data: renters } = useCollection<Renter>(rentersCollection);
+  const { data: bikes } = useCollection<Ebike>(bikesCollection);
+  const { data: rentals } = useCollection<Rental>(rentalsCollection);
+
+  const totalRenters = renters?.length || 0;
+  const totalBikes = bikes?.length || 0;
+  const activeRentals = rentals?.filter(r => r.status === 'Active').length || 0;
+  const totalRevenue = rentals?.reduce((acc, r) => acc + r.fee, 0) || 0;
+
   return (
     <div className="flex flex-col gap-4 md:gap-6">
         <div className="grid gap-4 md:grid-cols-2 md:gap-6 lg:grid-cols-4">
@@ -151,7 +153,7 @@ export default function Dashboard() {
             </Button>
           </CardHeader>
           <CardContent className="grid gap-8">
-            {rentals.slice(0, 4).map((rental) => (
+            {rentals?.slice(0, 4).map((rental) => (
                 <div key={rental.id} className="flex items-center gap-4">
                     <Avatar className="hidden h-9 w-9 sm:flex">
                         <AvatarFallback>
@@ -165,6 +167,9 @@ export default function Dashboard() {
                     <div className="ml-auto font-medium">₱{rental.fee.toFixed(2)}</div>
                 </div>
             ))}
+             {(!rentals || rentals.length === 0) && (
+              <p className="text-sm text-center text-muted-foreground col-span-full h-24 flex items-center justify-center">No recent rentals.</p>
+            )}
           </CardContent>
         </Card>
       </div>

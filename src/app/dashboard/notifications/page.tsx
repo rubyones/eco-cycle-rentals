@@ -13,9 +13,15 @@ import {
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { notificationSettings as initialSettings } from "@/lib/data";
+import { NotificationSetting } from "@/lib/types";
 import React, { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+
+const initialSettings: NotificationSetting[] = [
+    { id: 'rental-reminders', label: 'Rental Time Reminders', description: 'Notify renters before their rental period ends.', active: true },
+    { id: 'payment-due', label: 'Payment Due Notices', description: 'Send automated reminders for overdue payments.', active: true },
+    { id: 'lock-warnings', label: 'Lock Warnings', description: 'Warn users before an e-bike is locked due to non-payment.', active: false },
+]
 
 export default function NotificationsPage() {
   const [notificationSettings, setNotificationSettings] = useState(initialSettings);

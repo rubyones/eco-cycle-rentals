@@ -27,9 +27,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { rentals } from "@/lib/data";
+import { Rental } from "@/lib/types";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious, PaginationEllipsis } from "@/components/ui/pagination";
 import { useToast } from "@/hooks/use-toast";
+import { useState } from "react";
 
 const statusVariant = {
     'Active': 'default',
@@ -39,6 +40,7 @@ const statusVariant = {
 
 export default function RentalsPage() {
   const { toast } = useToast();
+  const [rentals, setRentals] = useState<Rental[]>([]);
 
   const handleViewDetails = (rentalId: string) => {
     toast({
@@ -108,6 +110,11 @@ export default function RentalsPage() {
                 </TableCell>
               </TableRow>
             ))}
+             {rentals.length === 0 && (
+                <TableRow>
+                    <TableCell colSpan={7} className="text-center h-24">Data is not available at this time.</TableCell>
+                </TableRow>
+            )}
           </TableBody>
         </Table>
       </CardContent>

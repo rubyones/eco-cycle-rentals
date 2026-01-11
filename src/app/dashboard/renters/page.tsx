@@ -28,7 +28,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { renters as initialRenters, Renter } from "@/lib/data";
+import { Renter } from "@/lib/types";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious, PaginationEllipsis } from "@/components/ui/pagination";
 import React, { useState } from "react";
@@ -40,7 +40,7 @@ const statusVariant = {
 } as const;
 
 export default function RentersPage() {
-  const [renters, setRenters] = useState<Renter[]>(initialRenters);
+  const [renters, setRenters] = useState<Renter[]>([]);
   const { toast } = useToast();
 
   const handleViewProfile = (renterId: string) => {
@@ -142,6 +142,11 @@ export default function RentersPage() {
                 </TableRow>
               );
             })}
+             {renters.length === 0 && (
+                <TableRow>
+                    <TableCell colSpan={6} className="text-center h-24">Data is not available at this time.</TableCell>
+                </TableRow>
+            )}
           </TableBody>
         </Table>
       </CardContent>

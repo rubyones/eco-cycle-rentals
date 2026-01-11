@@ -60,9 +60,13 @@ export function AddBikeForm({ isOpen, onOpenChange, onSubmit, stations }: AddBik
 
   useEffect(() => {
     if (isOpen) {
-      form.reset();
+      form.reset({
+        stationId: stations.length > 0 ? stations[0].id : '',
+        batteryLevel: 100,
+        status: 'Available',
+      });
     }
-  }, [isOpen, form]);
+  }, [isOpen, form, stations]);
 
   const handleSubmit = (values: AddBikeFormValues) => {
     onSubmit(values);
@@ -85,7 +89,7 @@ export function AddBikeForm({ isOpen, onOpenChange, onSubmit, stations }: AddBik
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Station</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} value={field.value} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select a station" />
@@ -122,7 +126,7 @@ export function AddBikeForm({ isOpen, onOpenChange, onSubmit, stations }: AddBik
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Status</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} value={field.value} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select a status" />
