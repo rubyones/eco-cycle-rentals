@@ -28,7 +28,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { bikes as initialBikes, Bike } from "@/lib/data";
+import { bikes as initialBikes, stations, Bike } from "@/lib/data";
 import {
     Pagination,
     PaginationContent,
@@ -41,6 +41,7 @@ import {
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import React, { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { AddBikeForm } from "./add-bike-form";
 
 const statusVariant = {
     'Available': 'secondary',
@@ -51,16 +52,25 @@ const statusVariant = {
 
 export default function BikesPage() {
   const [bikes, setBikes] = useState<Bike[]>(initialBikes);
+  const [isAddBikeOpen, setIsAddBikeOpen] = useState(false);
   const { toast } = useToast();
 
-  const handleAddBike = () => {
-    // In a real app, this would open a form to add a new bike.
-    // For now, we'll just show a toast notification.
+  const handleAddBike = (newBike: Omit<Bike, 'id' | 'image'>) => {
+    const nextId = `EBK${(parseInt(bikes[bikes.length - 1].id.replace('EBK', '')) + 1).toString().padStart(3, '0')}`;
+    const ebikeImages = ['ebike-1', 'ebike-2', 'ebike-3'];
+    const randomImage = ebikeImages[Math.floor(Math.random() * ebikeImages.length)];
+    const newBikeWithId: Bike = {
+      ...newBike,
+      id: nextId,
+      image: randomImage,
+    };
+    setBikes(currentBikes => [...currentBikes, newBikeWithId]);
     toast({
-        title: "Add E-Bike",
-        description: "This feature is not yet implemented.",
+        title: "E-Bike Added",
+        description: `E-Bike ${newBikeWithId.id} has been successfully added.`,
     });
-  }
+    setIsAddBikeOpen(false);
+  };
 
   const handleEdit = (bikeId: string) => {
     toast({
@@ -95,6 +105,7 @@ export default function BikesPage() {
 
 
   return (
+    <>
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
@@ -104,7 +115,7 @@ export default function BikesPage() {
                 Register new e-bike units, modify existing records, and remotely lock/unlock e-bikes.
                 </CardDescription>
             </div>
-            <Button size="sm" className="gap-1" onClick={handleAddBike}>
+            <Button size="sm" className="gap-1" onClick={() => setIsAddBikeOpen(true)}>
                 <PlusCircle className="h-3.5 w-3.5" />
                 <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
                 Add E-Bike
@@ -205,5 +216,12 @@ export default function BikesPage() {
         </Pagination>
       </CardFooter>
     </Card>
+    <AddBikeForm 
+        isOpen={isAddBikeOpen} 
+        onOpenChange={setIsAddBikeOpen}
+        onSubmit={handleAddBike}
+        stations={stations}
+    />
+    </>
   );
 }

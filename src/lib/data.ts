@@ -10,7 +10,7 @@ export const renters: Renter[] = [
   { id: 'USR007', name: 'Angelica Torres', email: 'angelica@example.com', avatar: 'user-avatar-2', status: 'Active', rentalStatus: 'Idle', rentalHistoryCount: 15, joinDate: '2022-12-25' },
 ];
 
-export const bikes: Bike[] = [
+export let bikes: Bike[] = [
   { id: 'EBK001', stationId: 'STN001', battery: 85, status: 'Available', image: 'ebike-1' },
   { id: 'EBK002', stationId: 'STN001', battery: 62, status: 'In-Use', image: 'ebike-2' },
   { id: 'EBK003', stationId: 'STN002', battery: 95, status: 'Available', image: 'ebike-3' },
