@@ -1,8 +1,7 @@
 
 'use client';
 
-import Image from "next/image";
-import { MoreHorizontal, PlusCircle, Lock, Unlock, Trash2 } from "lucide-react";
+import { MoreHorizontal, PlusCircle, Lock, Unlock, Trash2, Bike } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -37,7 +36,6 @@ import {
     PaginationNext,
     PaginationPrevious,
   } from "@/components/ui/pagination";
-import { PlaceHolderImages } from "@/lib/placeholder-images";
 import React, { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { AddBikeForm } from "./add-bike-form";
@@ -80,9 +78,9 @@ export default function BikesPage() {
             const batch = writeBatch(firestore);
             
             const initialBikes: Omit<Ebike, 'id'>[] = [
-                { stationId: stations[0].id, batteryLevel: 95, status: 'Available', locked: false, image: 'ebike-1' },
-                { stationId: stations[0].id, batteryLevel: 82, status: 'Available', locked: false, image: 'ebike-2' },
-                { stationId: stations[1 % stations.length].id, batteryLevel: 100, status: 'Available', locked: false, image: 'ebike-3' },
+                { stationId: stations[0].id, batteryLevel: 95, status: 'Available', locked: false, lastMaintenanceDate: new Date().toISOString() },
+                { stationId: stations[0].id, batteryLevel: 82, status: 'Available', locked: false, lastMaintenanceDate: new Date().toISOString() },
+                { stationId: stations[1 % stations.length].id, batteryLevel: 100, status: 'Available', locked: false, lastMaintenanceDate: new Date().toISOString() },
             ];
 
             initialBikes.forEach(bikeData => {
@@ -102,16 +100,13 @@ export default function BikesPage() {
   }, [bikes, isLoadingBikes, stations, firestore, toast, isSeeding]);
 
 
-  const handleAddBike = (newBikeData: Omit<Ebike, 'id' | 'image' | 'locked'>) => {
+  const handleAddBike = (newBikeData: Omit<Ebike, 'id' | 'lastMaintenanceDate'>) => {
     if (!bikesCollection) return;
-    
-    const ebikeImages = ['ebike-1', 'ebike-2', 'ebike-3'];
-    const randomImage = ebikeImages[Math.floor(Math.random() * ebikeImages.length)];
     
     const newBike: Omit<Ebike, 'id'> = {
       ...newBikeData,
       locked: newBikeData.status === 'Locked',
-      image: randomImage,
+      lastMaintenanceDate: new Date().toISOString(),
     };
     
     addDocumentNonBlocking(bikesCollection, newBike);
@@ -182,8 +177,8 @@ export default function BikesPage() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="hidden w-[100px] sm:table-cell">
-                <span className="sr-only">Image</span>
+              <TableHead className="hidden w-[64px] sm:table-cell">
+                <span className="sr-only">Icon</span>
               </TableHead>
               <TableHead>E-Bike ID</TableHead>
               <TableHead>Status</TableHead>
@@ -201,21 +196,13 @@ export default function BikesPage() {
                 </TableRow>
             )}
             {!isLoadingBikes && !isSeeding && bikes?.map((bike, index) => {
-              const image = PlaceHolderImages.find(p => p.id === bike.image);
               const station = stations?.find(s => s.id === bike.stationId);
               return (
               <TableRow key={bike.id}>
                  <TableCell className="hidden sm:table-cell">
-                    {image && (
-                      <Image
-                        alt={bike.id}
-                        className="aspect-square rounded-md object-cover"
-                        data-ai-hint={image.imageHint}
-                        height="64"
-                        src={image.imageUrl}
-                        width="64"
-                      />
-                    )}
+                    <div className="flex items-center justify-center h-16 w-16 bg-muted rounded-md">
+                        <Bike className="h-8 w-8 text-muted-foreground" />
+                    </div>
                   </TableCell>
                 <TableCell className="font-medium">{formatBikeId(bike.id, index)}</TableCell>
                 <TableCell>
@@ -291,3 +278,5 @@ export default function BikesPage() {
     </>
   );
 }
+
+    
