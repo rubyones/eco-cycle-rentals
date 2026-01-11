@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useForm } from 'react-hook-form';
@@ -44,7 +43,7 @@ type AddBikeFormValues = z.infer<typeof formSchema>;
 interface AddBikeFormProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
-  onSubmit: (values: Omit<Ebike, 'id' | 'image' | 'locked' | 'lastMaintenanceDate'>) => void;
+  onSubmit: (values: Omit<Ebike, 'id' | 'locked' | 'lastMaintenanceDate'>) => void;
   stations: Station[];
 }
 

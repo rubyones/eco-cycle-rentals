@@ -1,4 +1,3 @@
-
 'use client';
 
 import { MoreHorizontal, PlusCircle, Lock, Unlock, Trash2, Bike } from "lucide-react";
@@ -77,10 +76,10 @@ export default function BikesPage() {
             setIsSeeding(true);
             const batch = writeBatch(firestore);
             
-            const initialBikes: Omit<Ebike, 'id'>[] = [
-                { stationId: stations[0].id, batteryLevel: 95, status: 'Available', locked: false, lastMaintenanceDate: new Date().toISOString(), image: '' },
-                { stationId: stations[0].id, batteryLevel: 82, status: 'Available', locked: false, lastMaintenanceDate: new Date().toISOString(), image: '' },
-                { stationId: stations[1 % stations.length].id, batteryLevel: 100, status: 'Available', locked: false, lastMaintenanceDate: new Date().toISOString(), image: '' },
+            const initialBikes: Omit<Ebike, 'id' | 'image'>[] = [
+                { stationId: stations[0].id, batteryLevel: 95, status: 'Available', locked: false, lastMaintenanceDate: new Date().toISOString() },
+                { stationId: stations[0].id, batteryLevel: 82, status: 'Available', locked: false, lastMaintenanceDate: new Date().toISOString() },
+                { stationId: stations[1 % stations.length].id, batteryLevel: 100, status: 'In-Use', locked: false, lastMaintenanceDate: new Date().toISOString() },
             ];
 
             initialBikes.forEach(bikeData => {
@@ -103,11 +102,10 @@ export default function BikesPage() {
   const handleAddBike = (newBikeData: Omit<Ebike, 'id' | 'lastMaintenanceDate' | 'image'>) => {
     if (!bikesCollection) return;
     
-    const newBike: Omit<Ebike, 'id'> = {
+    const newBike: Omit<Ebike, 'id' | 'image'> = {
       ...newBikeData,
       locked: newBikeData.status === 'Locked',
       lastMaintenanceDate: new Date().toISOString(),
-      image: '',
     };
     
     addDocumentNonBlocking(bikesCollection, newBike);
@@ -207,7 +205,7 @@ export default function BikesPage() {
                   </TableCell>
                 <TableCell className="font-medium">{formatBikeId(bike.id, index)}</TableCell>
                 <TableCell>
-                  <Badge variant={statusVariant[bike.status]}>{bike.status}</Badge>
+                  <Badge variant={statusVariant[bike.status as keyof typeof statusVariant]}>{bike.status}</Badge>
                 </TableCell>
                 <TableCell className="hidden md:table-cell">{bike.batteryLevel}%</TableCell>
                 <TableCell className="hidden md:table-cell">{station?.name || bike.stationId}</TableCell>

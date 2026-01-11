@@ -1,41 +1,60 @@
 'use client';
 import {
-  Auth, // Import Auth type for type hinting
+  Auth, 
   signInAnonymously,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
-  // Assume getAuth and app are initialized elsewhere
+  updateProfile,
 } from 'firebase/auth';
 import { errorEmitter } from './error-emitter';
 import { FirestorePermissionError } from './errors';
+import { doc, setDoc } from 'firebase/firestore';
+import { getSdks } from '.';
 
 /** Initiate anonymous sign-in (non-blocking). */
 export function initiateAnonymousSignIn(authInstance: Auth): void {
-  // CRITICAL: Call signInAnonymously directly. Do NOT use 'await signInAnonymously(...)'.
   signInAnonymously(authInstance).catch(error => {
-    // Although we don't have a specific error type for auth, we can log it.
-    // In a real app, you might create a more specific AuthError.
     console.error("Anonymous Sign-In Error:", error);
   });
-  // Code continues immediately. Auth state change is handled by onAuthStateChanged listener.
 }
 
 /** Initiate email/password sign-up (non-blocking). */
-export function initiateEmailSignUp(authInstance: Auth, email: string, password: string): void {
-  // CRITICAL: Call createUserWithEmailAndPassword directly. Do NOT use 'await createUserWithEmailAndPassword(...)'.
-  createUserWithEmailAndPassword(authInstance, email, password).catch(error => {
-    console.error("Email Sign-Up Error:", error);
-  });
-  // Code continues immediately. Auth state change is handled by onAuthStateChanged listener.
+export function initiateEmailSignUp(authInstance: Auth, email: string, password: string, extraData?: { [key: string]: any }): void {
+  createUserWithEmailAndPassword(authInstance, email, password)
+    .then(userCredential => {
+      const { firestore } = getSdks(authInstance.app);
+      const user = userCredential.user;
+      
+      // Create renter document in Firestore
+      const renterRef = doc(firestore, 'renters', user.uid);
+      const renterData = {
+        id: user.uid,
+        email: user.email,
+        dateJoined: new Date().toISOString(),
+        status: 'active',
+        ...extraData,
+      };
+      
+      // Update profile and set document non-blockingly
+      updateProfile(user, { displayName: `${extraData?.firstName} ${extraData?.lastName}` });
+      setDoc(renterRef, renterData, { merge: true }).catch(error => {
+         errorEmitter.emit('permission-error', new FirestorePermissionError({
+            path: renterRef.path,
+            operation: 'create',
+            requestResourceData: renterData,
+         }));
+      });
+
+    })
+    .catch(error => {
+        console.error("Email Sign-Up Error:", error);
+    });
 }
 
 /** Initiate email/password sign-in (non-blocking). */
 export function initiateEmailSignIn(authInstance: Auth, email: string, password: string): void {
-  // CRITICAL: Call signInWithEmailAndPassword directly. Do NOT use 'await signInWithEmailAndPassword(...)'.
   signInWithEmailAndPassword(authInstance, email, password)
   .catch(error => {
       console.error("Email Sign-In Error:", error);
-      // You could potentially emit a specific auth error here if you build that system.
   });
-  // Code continues immediately. Auth state change is handled by onAuthStateChanged listener.
 }

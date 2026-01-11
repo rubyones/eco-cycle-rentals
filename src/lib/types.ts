@@ -1,4 +1,3 @@
-
 import { Timestamp } from "firebase/firestore";
 
 export type Renter = {
@@ -18,7 +17,7 @@ export type Ebike = {
   status: 'Available' | 'Locked' | 'In-Use' | 'Maintenance';
   locked: boolean;
   lastMaintenanceDate?: string;
-  image: string;
+  image?: string;
 };
 
 export type Station = {

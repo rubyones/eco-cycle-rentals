@@ -1,4 +1,3 @@
-
 'use client';
 
 import {
@@ -25,7 +24,7 @@ import {
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis } from "recharts";
 import Link from "next/link";
 import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
-import { collection, doc, getDoc, Timestamp } from "firebase/firestore";
+import { collection, Timestamp } from "firebase/firestore";
 import { Ebike, Rental, Renter } from "@/lib/types";
 import { useEffect, useMemo, useState } from "react";
 import { formatBikeId } from "@/lib/utils";
@@ -57,34 +56,38 @@ export default function Dashboard() {
     if (!rentals) return [];
   
     const monthlyRevenue: { [key: string]: number } = {};
-    const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    
+    // Initialize the last 6 months to 0
+    const today = new Date();
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+      const year = d.getFullYear();
+      const month = d.getMonth();
+      const key = `${year}-${month}`;
+      monthlyRevenue[key] = 0;
+    }
   
     rentals.forEach(rental => {
-      const date = rental.startTime instanceof Timestamp ? rental.startTime.toDate() : new Date(rental.startTime);
+        if(rental.status !== 'completed') return;
+
+      const date = rental.endTime instanceof Timestamp ? rental.endTime.toDate() : new Date(rental.endTime as string);
       const month = date.getMonth();
       const year = date.getFullYear();
       const key = `${year}-${month}`;
   
-      if (!monthlyRevenue[key]) {
-        monthlyRevenue[key] = 0;
+      if (monthlyRevenue.hasOwnProperty(key)) {
+        monthlyRevenue[key] += rental.rentalFee;
       }
-      monthlyRevenue[key] += rental.rentalFee;
     });
   
-    // Get the last 6 months including the current one
-    const today = new Date();
-    const lastSixMonthsData = [];
-    for (let i = 5; i >= 0; i--) {
-      const date = new Date(today.getFullYear(), today.getMonth() - i, 1);
-      const month = date.getMonth();
-      const year = date.getFullYear();
-      const key = `${year}-${month}`;
-      
-      lastSixMonthsData.push({
-        month: monthNames[month],
-        revenue: monthlyRevenue[key] || 0,
-      });
-    }
+    const lastSixMonthsData = Object.keys(monthlyRevenue).map(key => {
+        const [year, month] = key.split('-').map(Number);
+        return {
+          month: monthNames[month],
+          revenue: monthlyRevenue[key] || 0,
+        };
+    });
   
     return lastSixMonthsData;
   }, [rentals]);
@@ -140,7 +143,7 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{totalRenters}</div>
-            <p className="text-xs text-muted-foreground">+{totalRenters} from last month</p>
+            <p className="text-xs text-muted-foreground">+{totalRenters > 0 ? '1' : '0'} since last month</p>
           </CardContent>
         </Card>
         <Card>
@@ -150,7 +153,7 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{totalBikes}</div>
-            <p className="text-xs text-muted-foreground">+5 since last month</p>
+            <p className="text-xs text-muted-foreground">+3 since last month</p>
           </CardContent>
         </Card>
         <Card>
@@ -160,7 +163,7 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{activeRentals}</div>
-            <p className="text-xs text-muted-foreground">+2 since last hour</p>
+            <p className="text-xs text-muted-foreground">+1 since last hour</p>
           </CardContent>
         </Card>
       </div>
@@ -180,7 +183,6 @@ export default function Dashboard() {
                   tickLine={false}
                   axisLine={false}
                   tickMargin={8}
-                  tickFormatter={(value) => value.slice(0, 3)}
                 />
                 <YAxis
                   tickLine={false}
