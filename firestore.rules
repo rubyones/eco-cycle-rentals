@@ -1,0 +1,208 @@
+/**
+ * Core Philosophy:
+ * This ruleset enforces a strict user-ownership model for all user-generated
+ * content. A user's private data, such as their profile, rentals, and payments,
+ * is stored in a way that only that specific user can access it. Publicly
+ * available data, like e-bike and station locations, is readable by anyone
+ * to support core application functionality like maps.
+ *
+ * Data Structure:
+ * The data is organized into top-level collections. The `/renters/{renterId}`
+ * collection serves as the root for all user-specific data. Related entities
+ * like rentals, payments, and notifications are stored in subcollections under
+ * the corresponding renter document (e.g., `/renters/{renterId}/rentals/...`).
+ * This path-based ownership is the cornerstone of the security model.
+ * Global data like `/ebikes` and `/stations` exists at the top level.
+ *
+ * Key Security Decisions:
+ * - User Isolation: Listing users from the top-level `/renters` collection
+ *   is explicitly disallowed to protect user privacy.
+ * - Path-Based Ownership: All rules for subcollections under a user's
+ *   document (`/renters/{renterId}/*`) derive their authorization from the
+ *   `renterId` in the path, ensuring a user can only ever access their own data tree.
+ * - Public Data: `/ebikes` and `/stations` are publicly readable to allow any
+ *   user, signed-in or not, to view bike and station availability. Writes to
+ *   these collections are disabled for clients, assuming they are managed by
+ *   a trusted backend or admin panel.
+ * - Authenticated Actions: Reporting a maintenance issue is allowed for any
+ *   signed-in user, but managing (reading, updating, deleting) these issues
+ *   is disabled on the client side, deferring to an admin process.
+ * - Notifications: Notifications are considered read-only for the user. They
+ *   are created by a backend service and cannot be created or modified by clients.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // --------------------------------------------------------------------
+    // Helper Functions
+    // --------------------------------------------------------------------
+
+    /**
+     * Checks if a user is authenticated.
+     */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /**
+     * Checks if the currently signed-in user's UID matches the provided userId.
+     * This is the primary function for verifying document ownership.
+     */
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /**
+     * Combines an ownership check with a verification that the document
+     * already exists. Essential for secure update and delete operations.
+     */
+    function isExistingOwner(userId) {
+      return isOwner(userId) && resource != null;
+    }
+
+    /**
+     * On create, validates that the renter document's internal `id` field
+     * matches the document ID from the path, ensuring relational integrity.
+     */
+    function isCreatingValidRenter(renterId) {
+      return request.resource.data.id == renterId;
+    }
+
+    /**
+     * On update, ensures the renter document's internal `id` field is immutable.
+     */
+    function isUpdatingImmutableRenter() {
+      return request.resource.data.id == resource.data.id;
+    }
+    
+    /**
+     * On create, validates that a subcollection document's internal `renterId`
+     * field matches the renterId from the path, ensuring relational integrity.
+     */
+    function isCreatingValidOwnedDoc(renterId) {
+      return request.resource.data.renterId == renterId;
+    }
+
+    /**
+     * On update, ensures the subcollection document's internal `renterId` is immutable.
+     */
+    function isUpdatingImmutableOwnedDoc() {
+      return request.resource.data.renterId == resource.data.id;
+    }
+
+    // --------------------------------------------------------------------
+    // Renter-Specific Collections
+    // --------------------------------------------------------------------
+
+    /**
+     * @description A renter can create their own profile, and only they can read, update, or delete it. Listing all renters is forbidden.
+     * @path        /renters/{renterId}
+     * @allow       (create) A new user with uid `user_abc` can create `/renters/user_abc`.
+     * @deny        (get) A user `user_xyz` cannot read `/renters/user_abc`.
+     * @deny        (list) No user can list the `/renters` collection.
+     * @principle   Enforces self-creation and strict ownership of a user's root document.
+     */
+    match /renters/{renterId} {
+      allow get: if isOwner(renterId);
+      allow list: if false;
+      allow create: if isOwner(renterId) && isCreatingValidRenter(renterId);
+      allow update: if isExistingOwner(renterId) && isUpdatingImmutableRenter();
+      allow delete: if isExistingOwner(renterId);
+
+      /**
+       * @description A renter can manage their own rental history. No one else can access these records.
+       * @path        /renters/{renterId}/rentals/{rentalId}
+       * @allow       (get) User `user_abc` can read their own rental at `/renters/user_abc/rentals/rental_123`.
+       * @deny        (list) User `user_xyz` cannot list rentals under `/renters/user_abc/rentals`.
+       * @principle   Restricts access to a user's own data tree using path-based security.
+       */
+      match /rentals/{rentalId} {
+        allow get: if isOwner(renterId);
+        allow list: if isOwner(renterId);
+        allow create: if isOwner(renterId) && isCreatingValidOwnedDoc(renterId);
+        allow update: if isExistingOwner(renterId) && isUpdatingImmutableOwnedDoc();
+        allow delete: if isExistingOwner(renterId);
+      }
+
+      /**
+       * @description A renter can manage their own payment history. No one else can access these records.
+       * @path        /renters/{renterId}/payments/{paymentId}
+       * @allow       (create) User `user_abc` can create a payment at `/renters/user_abc/payments/payment_123`.
+       * @deny        (get) User `user_xyz` cannot read a payment at `/renters/user_abc/payments/payment_123`.
+       * @principle   Restricts access to a user's own data tree using path-based security.
+       */
+      match /payments/{paymentId} {
+        allow get: if isOwner(renterId);
+        allow list: if isOwner(renterId);
+        allow create: if isOwner(renterId) && isCreatingValidOwnedDoc(renterId);
+        allow update: if isExistingOwner(renterId) && isUpdatingImmutableOwnedDoc();
+        allow delete: if isExistingOwner(renterId);
+      }
+
+      /**
+       * @description A renter can read and delete their notifications. Notifications are created by a backend service, not the client.
+       * @path        /renters/{renterId}/notifications/{notificationId}
+       * @allow       (get, list, delete) User `user_abc` can manage their notifications under `/renters/user_abc/notifications`.
+       * @deny        (create, update) No client can create or modify a notification.
+       * @principle   Secures a subcollection as read-only for the owner, with writes reserved for backend processes.
+       */
+      match /notifications/{notificationId} {
+        allow get: if isOwner(renterId);
+        allow list: if isOwner(renterId);
+        allow create: if false;
+        allow update: if false;
+        allow delete: if isExistingOwner(renterId);
+      }
+    }
+
+    // --------------------------------------------------------------------
+    // Public & System Collections
+    // --------------------------------------------------------------------
+
+    /**
+     * @description E-bike data is public for any user to view (e.g., on a map), but can only be modified by a backend admin process.
+     * @path        /ebikes/{ebikeId}
+     * @allow       (get, list) Any user, signed-in or anonymous, can read e-bike data.
+     * @deny        (create, update, delete) No client user can modify e-bike documents.
+     * @principle   Provides public read access for application data while securing writes for admin-only management.
+     */
+    match /ebikes/{ebikeId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    /**
+     * @description Station data is public for any user to view (e.g., on a map), but can only be modified by a backend admin process.
+     * @path        /stations/{stationId}
+     * @allow       (get, list) Any user, signed-in or anonymous, can read station data.
+     * @deny        (create, update, delete) No client user can modify station documents.
+     * @principle   Provides public read access for application data while securing writes for admin-only management.
+     */
+    match /stations/{stationId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    /**
+     * @description Any authenticated renter can report a maintenance issue. Viewing and managing issues is restricted to an admin backend.
+     * @path        /maintenance_issues/{maintenanceIssueId}
+     * @allow       (create) A signed-in user can create a new maintenance issue document.
+     * @deny        (get, list, update, delete) No client can read, modify, or delete existing issues.
+     * @principle   Allows signed-in users to create reports while preventing them from viewing or tampering with other reports.
+     */
+    match /maintenance_issues/{maintenanceIssueId} {
+      allow get: if false;
+      allow list: if false;
+      allow create: if isSignedIn();
+      allow update: if false;
+      allow delete: if false;
+    }
+  }
+}

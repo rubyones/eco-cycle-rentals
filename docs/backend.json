@@ -1,0 +1,425 @@
+{
+  "entities": {
+    "Renter": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Renter",
+      "type": "object",
+      "description": "Represents a registered renter in the e-bike rental system.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the renter."
+        },
+        "firstName": {
+          "type": "string",
+          "description": "The first name of the renter."
+        },
+        "lastName": {
+          "type": "string",
+          "description": "The last name of the renter."
+        },
+        "email": {
+          "type": "string",
+          "description": "The email address of the renter.",
+          "format": "email"
+        },
+        "phone": {
+          "type": "string",
+          "description": "The phone number of the renter."
+        },
+        "dateJoined": {
+          "type": "string",
+          "description": "The date and time when the renter joined the system.",
+          "format": "date-time"
+        },
+        "status": {
+          "type": "string",
+          "description": "The current status of the renter (e.g., active, suspended, deactivated)."
+        }
+      },
+      "required": [
+        "id",
+        "firstName",
+        "lastName",
+        "email",
+        "phone",
+        "dateJoined",
+        "status"
+      ]
+    },
+    "Ebike": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Ebike",
+      "type": "object",
+      "description": "Represents an e-bike unit in the rental system.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the e-bike unit."
+        },
+        "stationId": {
+          "type": "string",
+          "description": "Reference to Station. The station where the e-bike is currently located. (Relationship: Station 1:N Ebike)"
+        },
+        "batteryLevel": {
+          "type": "number",
+          "description": "The current battery level of the e-bike (percentage)."
+        },
+        "status": {
+          "type": "string",
+          "description": "The current status of the e-bike (e.g., available, in use, under maintenance, locked)."
+        },
+        "locked": {
+          "type": "boolean",
+          "description": "Indicates whether the e-bike is currently locked."
+        },
+        "lastMaintenanceDate": {
+          "type": "string",
+          "description": "The date of the e-bike's last maintenance.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "stationId",
+        "batteryLevel",
+        "status",
+        "locked"
+      ]
+    },
+    "Station": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Station",
+      "type": "object",
+      "description": "Represents a rental station where e-bikes are located.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the rental station."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the rental station."
+        },
+        "latitude": {
+          "type": "number",
+          "description": "The latitude coordinate of the station's location."
+        },
+        "longitude": {
+          "type": "number",
+          "description": "The longitude coordinate of the station's location."
+        },
+        "parkingBays": {
+          "type": "number",
+          "description": "The number of parking bays available at the station."
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "latitude",
+        "longitude",
+        "parkingBays"
+      ]
+    },
+    "Rental": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Rental",
+      "type": "object",
+      "description": "Represents a rental transaction.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the rental transaction."
+        },
+        "renterId": {
+          "type": "string",
+          "description": "Reference to Renter. The renter who initiated the rental. (Relationship: Renter 1:N Rental)"
+        },
+        "ebikeId": {
+          "type": "string",
+          "description": "Reference to Ebike. The e-bike being rented. (Relationship: Ebike 1:N Rental)"
+        },
+        "startTime": {
+          "type": "string",
+          "description": "The date and time when the rental started.",
+          "format": "date-time"
+        },
+        "endTime": {
+          "type": "string",
+          "description": "The date and time when the rental ended (can be null if the rental is still active).",
+          "format": "date-time"
+        },
+        "rentalFee": {
+          "type": "number",
+          "description": "The computed rental fee for the transaction."
+        },
+        "status": {
+          "type": "string",
+          "description": "The status of the rental (e.g., active, completed, overdue)."
+        }
+      },
+      "required": [
+        "id",
+        "renterId",
+        "ebikeId",
+        "startTime",
+        "rentalFee",
+        "status"
+      ]
+    },
+    "Payment": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Payment",
+      "type": "object",
+      "description": "Represents a payment made by a renter.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the payment."
+        },
+        "renterId": {
+          "type": "string",
+          "description": "Reference to Renter. The renter who made the payment. (Relationship: Renter 1:N Payment)"
+        },
+        "rentalId": {
+          "type": "string",
+          "description": "Reference to Rental. The rental for which the payment was made. (Relationship: Rental 1:N Payment)"
+        },
+        "paymentDate": {
+          "type": "string",
+          "description": "The date and time when the payment was made.",
+          "format": "date-time"
+        },
+        "amount": {
+          "type": "number",
+          "description": "The amount paid."
+        },
+        "status": {
+          "type": "string",
+          "description": "The status of the payment (e.g., paid, pending, overdue)."
+        }
+      },
+      "required": [
+        "id",
+        "renterId",
+        "rentalId",
+        "paymentDate",
+        "amount",
+        "status"
+      ]
+    },
+    "MaintenanceIssue": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "MaintenanceIssue",
+      "type": "object",
+      "description": "Represents a maintenance issue reported for an e-bike.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the maintenance issue."
+        },
+        "ebikeId": {
+          "type": "string",
+          "description": "Reference to Ebike. The e-bike for which the issue was reported. (Relationship: Ebike 1:N MaintenanceIssue)"
+        },
+        "reportDate": {
+          "type": "string",
+          "description": "The date and time when the issue was reported.",
+          "format": "date-time"
+        },
+        "description": {
+          "type": "string",
+          "description": "A description of the maintenance issue."
+        },
+        "status": {
+          "type": "string",
+          "description": "The status of the maintenance issue (e.g., open, in progress, resolved)."
+        },
+        "resolutionDate": {
+          "type": "string",
+          "description": "The date and time when the issue was resolved (can be null if the issue is still open).",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "ebikeId",
+        "reportDate",
+        "description",
+        "status"
+      ]
+    },
+    "Notification": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Notification",
+      "type": "object",
+      "description": "Represents a notification sent to a renter.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the notification."
+        },
+        "renterId": {
+          "type": "string",
+          "description": "Reference to Renter. The renter to whom the notification was sent. (Relationship: Renter 1:N Notification)"
+        },
+        "sentDate": {
+          "type": "string",
+          "description": "The date and time when the notification was sent.",
+          "format": "date-time"
+        },
+        "message": {
+          "type": "string",
+          "description": "The content of the notification message."
+        },
+        "type": {
+          "type": "string",
+          "description": "The type of notification (e.g., rental reminder, payment due, announcement)."
+        }
+      },
+      "required": [
+        "id",
+        "renterId",
+        "sentDate",
+        "message",
+        "type"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/renters/{renterId}",
+        "definition": {
+          "entityName": "Renter",
+          "schema": {
+            "$ref": "#/backend/entities/Renter"
+          },
+          "description": "Stores renter profiles. Uses path-based ownership for related subcollections.",
+          "params": [
+            {
+              "name": "renterId",
+              "description": "The unique identifier for the renter."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/renters/{renterId}/rentals/{rentalId}",
+        "definition": {
+          "entityName": "Rental",
+          "schema": {
+            "$ref": "#/backend/entities/Rental"
+          },
+          "description": "Stores rental transactions associated with a specific renter. This enforces path-based ownership.",
+          "params": [
+            {
+              "name": "renterId",
+              "description": "The unique identifier for the renter."
+            },
+            {
+              "name": "rentalId",
+              "description": "The unique identifier for the rental transaction."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/renters/{renterId}/payments/{paymentId}",
+        "definition": {
+          "entityName": "Payment",
+          "schema": {
+            "$ref": "#/backend/entities/Payment"
+          },
+          "description": "Stores payment information associated with a specific renter. Enforces path-based ownership.",
+          "params": [
+            {
+              "name": "renterId",
+              "description": "The unique identifier for the renter."
+            },
+            {
+              "name": "paymentId",
+              "description": "The unique identifier for the payment."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/renters/{renterId}/notifications/{notificationId}",
+        "definition": {
+          "entityName": "Notification",
+          "schema": {
+            "$ref": "#/backend/entities/Notification"
+          },
+          "description": "Stores notifications associated with a specific renter. Enforces path-based ownership.",
+          "params": [
+            {
+              "name": "renterId",
+              "description": "The unique identifier for the renter."
+            },
+            {
+              "name": "notificationId",
+              "description": "The unique identifier for the notification."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/ebikes/{ebikeId}",
+        "definition": {
+          "entityName": "Ebike",
+          "schema": {
+            "$ref": "#/backend/entities/Ebike"
+          },
+          "description": "Stores e-bike information.",
+          "params": [
+            {
+              "name": "ebikeId",
+              "description": "The unique identifier for the e-bike."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/stations/{stationId}",
+        "definition": {
+          "entityName": "Station",
+          "schema": {
+            "$ref": "#/backend/entities/Station"
+          },
+          "description": "Stores station information.",
+          "params": [
+            {
+              "name": "stationId",
+              "description": "The unique identifier for the station."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/maintenance_issues/{maintenanceIssueId}",
+        "definition": {
+          "entityName": "MaintenanceIssue",
+          "schema": {
+            "$ref": "#/backend/entities/MaintenanceIssue"
+          },
+          "description": "Stores maintenance issues reported for e-bikes.",
+          "params": [
+            {
+              "name": "maintenanceIssueId",
+              "description": "The unique identifier for the maintenance issue."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore structure is designed to manage an e-bike rental system, focusing on authorization independence and secure list operations (QAPs). It prioritizes path-based ownership for user-related data and uses structural segregation to maintain a homogeneous security posture.  The key collections are `renters`, `ebikes`, `stations`, `rentals`, `payments`, `maintenance_issues`, and `notifications`.  Path-based ownership is implemented where a renter owns rentals, payments, and notifications to easily secure these relationships.\n\n*   **Authorization Independence:** Relationships such as rentals belonging to renters are secured via subcollections. This avoids `get()` calls in security rules and enables atomic operations.\n*   **QAPs (Rules are not Filters):** Structural segregation ensures secure list operations by isolating data with different access needs into separate collections.\n*   **DBAC (No Custom Claims):**  The application relies solely on `request.auth.uid`. Access to user-owned data is determined by the path structure itself (`/renters/{renterId}/rentals/{rentalId}`).\n\nThe Admin panel is assumed to have full access and be dealt with separately."
+  }
+}
