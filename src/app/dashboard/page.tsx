@@ -56,9 +56,10 @@ export default function Dashboard() {
     if (!rentals) return [];
   
     const monthlyRevenue: { [key: string]: number } = {};
+    const monthLabels: {key: string, label: string}[] = [];
     const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     
-    // Initialize the last 6 months to 0
+    // Initialize the last 6 months
     const today = new Date();
     for (let i = 5; i >= 0; i--) {
       const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
@@ -66,6 +67,7 @@ export default function Dashboard() {
       const month = d.getMonth();
       const key = `${year}-${month}`;
       monthlyRevenue[key] = 0;
+      monthLabels.push({ key: key, label: monthNames[month]});
     }
   
     rentals.forEach(rental => {
@@ -81,10 +83,9 @@ export default function Dashboard() {
       }
     });
   
-    const lastSixMonthsData = Object.keys(monthlyRevenue).map(key => {
-        const [year, month] = key.split('-').map(Number);
+    const lastSixMonthsData = monthLabels.map(({key, label}) => {
         return {
-          month: monthNames[month],
+          month: label,
           revenue: monthlyRevenue[key] || 0,
         };
     });
