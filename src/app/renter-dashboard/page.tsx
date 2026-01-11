@@ -18,6 +18,7 @@ import { useToast } from '@/hooks/use-toast';
 import { RentBikeForm } from './rent-bike-form';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 
 const statusVariant = {
@@ -212,119 +213,122 @@ function RenterDashboardContent() {
        <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center justify-between gap-4 border-b bg-background/80 px-4 backdrop-blur-sm sm:px-6">
         <div className="flex items-center gap-2">
             <Bike className="h-6 w-6 text-primary" />
-            <h1 className="text-xl font-bold font-headline">
+            <h1 className="text-lg font-semibold md:text-xl">
               Welcome, {user.displayName || 'Renter'}!
             </h1>
         </div>
-        <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" onClick={() => document.getElementById('history')?.scrollIntoView({ behavior: 'smooth' })}>
-                <History className="h-5 w-5" />
-                <span className="sr-only">History</span>
-            </Button>
-            <Button variant="ghost" size="icon" onClick={handleLogout}>
-                <LogOut className="h-5 w-5" />
-                <span className="sr-only">Log out</span>
-            </Button>
-        </div>
+        <Button variant="ghost" size="icon" onClick={handleLogout}>
+            <LogOut className="h-5 w-5" />
+            <span className="sr-only">Log out</span>
+        </Button>
        </header>
       <main className="flex-1 p-4 sm:p-6">
-        <div className="mx-auto max-w-4xl space-y-6">
-            <Card className="w-full">
-                <CardHeader>
-                    <CardTitle>Current Rental Status</CardTitle>
-                    {activeRental && <CardDescription>You have an active rental. Please return the e-bike to the nearest station when finished.</CardDescription>}
-                </CardHeader>
-                <CardContent className="grid gap-6">
-                    {(isLoadingRentals || isLoadingStations) && <div className="flex items-center justify-center"><Loader2 className="h-6 w-6 animate-spin"/></div>}
-                    {!isLoadingRentals && activeRental && (
-                      <>
-                        <div className="flex items-center justify-between">
-                            <span className="text-muted-foreground">E-Bike ID</span>
-                            <span className="font-semibold">{formatBikeId(activeRental.ebikeId)}</span>
-                        </div>
-                        {startStation && (
-                            <div className="flex items-center justify-between">
-                                <span className="text-muted-foreground">Start Station</span>
-                                 <div className="flex items-center gap-2">
-                                    <MapPin className="h-4 w-4" />
-                                    <span className="font-semibold">{startStation.name}</span>
+        <div className="mx-auto max-w-4xl">
+            <Tabs defaultValue="rental">
+                <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="rental">Current Rental</TabsTrigger>
+                    <TabsTrigger value="history">History</TabsTrigger>
+                </TabsList>
+                <TabsContent value="rental">
+                     <Card>
+                        <CardHeader>
+                            <CardTitle>Rental Status</CardTitle>
+                            <CardDescription>Manage your ongoing e-bike rental.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-6">
+                            {(isLoadingRentals || isLoadingStations) && <div className="flex items-center justify-center py-8"><Loader2 className="h-6 w-6 animate-spin"/></div>}
+                            {!isLoadingRentals && activeRental && (
+                            <>
+                                <div className="flex items-center justify-between">
+                                    <span className="text-muted-foreground">E-Bike ID</span>
+                                    <span className="font-semibold">{formatBikeId(activeRental.ebikeId)}</span>
                                 </div>
-                            </div>
-                        )}
-                        <div className="flex items-center justify-between">
-                            <span className="text-muted-foreground">Rental Duration</span>
-                            <div className="flex items-center gap-2">
-                                <Clock className="h-4 w-4" />
-                                <span className="font-semibold tabular-nums">{duration}</span>
-                            </div>
-                        </div>
-                        <div className="flex items-center justify-between">
-                            <span className="text-muted-foreground">Current Fee</span>
-                            <div className="flex items-center gap-2">
-                                <DollarSign className="h-4 w-4" />
-                                <span className="font-semibold text-lg">₱{fee}</span>
-                            </div>
-                        </div>
-                        <Button className="w-full" onClick={handleEndRental}>
-                            Pay & End Rental
-                        </Button>
-                      </>
-                    )}
-                    {!isLoadingRentals && !activeRental && (
-                        <div className="text-center text-muted-foreground py-8">
-                            <p>You have no active rentals.</p>
-                            <Button className="mt-4" onClick={() => setIsRentFormOpen(true)}>Rent a Bike</Button>
-                        </div>
-                    )}
-                </CardContent>
-            </Card>
-
-            <Card id="history">
-                <CardHeader>
-                    <CardTitle>Rental History</CardTitle>
-                    <CardDescription>A record of your past e-bike rentals.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Bike ID</TableHead>
-                                <TableHead>Start Station</TableHead>
-                                <TableHead>Started</TableHead>
-                                <TableHead>Ended</TableHead>
-                                <TableHead>Duration</TableHead>
-                                <TableHead className="text-right">Fee</TableHead>
-                                <TableHead>Status</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {(isLoadingRentals || isLoadingStations) && (
-                                <TableRow>
-                                    <TableCell colSpan={7} className="h-24 text-center">Loading history...</TableCell>
-                                </TableRow>
+                                {startStation && (
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-muted-foreground">Start Station</span>
+                                        <div className="flex items-center gap-2">
+                                            <MapPin className="h-4 w-4" />
+                                            <span className="font-semibold">{startStation.name}</span>
+                                        </div>
+                                    </div>
+                                )}
+                                <div className="flex items-center justify-between">
+                                    <span className="text-muted-foreground">Rental Duration</span>
+                                    <div className="flex items-center gap-2">
+                                        <Clock className="h-4 w-4" />
+                                        <span className="font-semibold tabular-nums">{duration}</span>
+                                    </div>
+                                </div>
+                                <div className="flex items-center justify-between">
+                                    <span className="text-muted-foreground">Current Fee</span>
+                                    <div className="flex items-center gap-2">
+                                        <DollarSign className="h-4 w-4" />
+                                        <span className="font-semibold text-lg">₱{fee}</span>
+                                    </div>
+                                </div>
+                                <Button className="w-full" onClick={handleEndRental}>
+                                    Pay & End Rental
+                                </Button>
+                            </>
                             )}
-                            {!isLoadingRentals && !isLoadingStations && rentalHistory.length === 0 && (
-                                <TableRow>
-                                    <TableCell colSpan={7} className="h-24 text-center">No past rentals found.</TableCell>
-                                </TableRow>
+                            {!isLoadingRentals && !activeRental && (
+                                <div className="text-center text-muted-foreground py-8">
+                                    <p>You have no active rentals.</p>
+                                    <Button className="mt-4" onClick={() => setIsRentFormOpen(true)}>Rent a Bike</Button>
+                                </div>
                             )}
-                            {!isLoadingRentals && !isLoadingStations && rentalHistory.map(rental => (
-                                <TableRow key={rental.id}>
-                                    <TableCell>{formatBikeId(rental.ebikeId)}</TableCell>
-                                    <TableCell>{getStationName(rental.stationId)}</TableCell>
-                                    <TableCell>{formatTimestamp(rental.startTime)}</TableCell>
-                                    <TableCell>{formatTimestamp(rental.endTime)}</TableCell>
-                                    <TableCell>{calculateDuration(rental.startTime, rental.endTime)}</TableCell>
-                                    <TableCell className="text-right">₱{rental.rentalFee.toFixed(2)}</TableCell>
-                                    <TableCell>
-                                        <Badge variant={statusVariant[rental.status.toLowerCase() as keyof typeof statusVariant]}>{rental.status}</Badge>
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                </CardContent>
-            </Card>
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+                <TabsContent value="history">
+                     <Card>
+                        <CardHeader>
+                            <CardTitle>Rental History</CardTitle>
+                            <CardDescription>A record of your past e-bike rentals.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>Bike ID</TableHead>
+                                        <TableHead>Start Station</TableHead>
+                                        <TableHead>Started</TableHead>
+                                        <TableHead>Ended</TableHead>
+                                        <TableHead>Duration</TableHead>
+                                        <TableHead className="text-right">Fee</TableHead>
+                                        <TableHead>Status</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {(isLoadingRentals || isLoadingStations) && (
+                                        <TableRow>
+                                            <TableCell colSpan={7} className="h-24 text-center">Loading history...</TableCell>
+                                        </TableRow>
+                                    )}
+                                    {!isLoadingRentals && !isLoadingStations && rentalHistory.length === 0 && (
+                                        <TableRow>
+                                            <TableCell colSpan={7} className="h-24 text-center">No past rentals found.</TableCell>
+                                        </TableRow>
+                                    )}
+                                    {!isLoadingRentals && !isLoadingStations && rentalHistory.map(rental => (
+                                        <TableRow key={rental.id}>
+                                            <TableCell>{formatBikeId(rental.ebikeId)}</TableCell>
+                                            <TableCell>{getStationName(rental.stationId)}</TableCell>
+                                            <TableCell>{formatTimestamp(rental.startTime)}</TableCell>
+                                            <TableCell>{formatTimestamp(rental.endTime)}</TableCell>
+                                            <TableCell>{calculateDuration(rental.startTime, rental.endTime)}</TableCell>
+                                            <TableCell className="text-right">₱{rental.rentalFee.toFixed(2)}</TableCell>
+                                            <TableCell>
+                                                <Badge variant={statusVariant[rental.status.toLowerCase() as keyof typeof statusVariant]}>{rental.status}</Badge>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+            </Tabs>
         </div>
       </main>
     </div>
