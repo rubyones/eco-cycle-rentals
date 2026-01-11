@@ -28,7 +28,7 @@ import { useEffect } from 'react';
 
 const formSchema = z.object({
   name: z.string().nonempty({ message: 'Please enter a station name.' }),
-  location: z.string().regex(/^[-+]?([1-8]?\d(\.\d+)?|90(\.0+)?),\s*[-+]?(180(\.0+)?|((1[0-7]\d)|([1-9]?\d))(\.\d+)?)$/, { message: 'Invalid coordinates format (e.g., 40.782, -73.965).' }),
+  location: z.string().regex(/^-?([1-8]?\d(\.\d+)?|90(\.0+)?),\s*-?((1[0-7]\d)|([1-9]?\d))(\.\d+)?$/, { message: 'Invalid coordinates format (e.g., 40.782, -73.965).' }),
   capacity: z.coerce.number().min(1, 'Capacity must be at least 1.'),
 });
 

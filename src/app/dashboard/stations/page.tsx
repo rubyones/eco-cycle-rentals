@@ -51,10 +51,14 @@ export default function StationsPage() {
 
     const handleAddStation = (newStation: Omit<Station, 'id' | 'bikes'>) => {
       if (!stationsCollection) return;
-        const newStationWithId: Omit<Station, 'id'> = {
-            ...newStation,
-            bikes: 0,
+        const [latitude, longitude] = newStation.location.split(',').map(s => parseFloat(s.trim()));
+        const newStationWithId: Omit<Station, 'id' | 'location'> & { latitude: number, longitude: number, parkingBays: number } = {
+            name: newStation.name,
+            latitude: latitude,
+            longitude: longitude,
+            parkingBays: newStation.capacity,
         };
+
         addDocumentNonBlocking(stationsCollection, newStationWithId);
         toast({
             title: "Station Added",
