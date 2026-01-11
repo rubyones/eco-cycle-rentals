@@ -1,3 +1,6 @@
+
+'use client';
+
 import { MoreHorizontal } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -26,6 +29,7 @@ import {
 } from "@/components/ui/table";
 import { rentals } from "@/lib/data";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious, PaginationEllipsis } from "@/components/ui/pagination";
+import { useToast } from "@/hooks/use-toast";
 
 const statusVariant = {
     'Active': 'default',
@@ -34,6 +38,23 @@ const statusVariant = {
 } as const;
 
 export default function RentalsPage() {
+  const { toast } = useToast();
+
+  const handleViewDetails = (rentalId: string) => {
+    toast({
+      title: `Viewing Details for ${rentalId}`,
+      description: "This feature is not yet implemented.",
+    });
+  };
+
+  const handleForceTermination = (rentalId: string) => {
+    toast({
+      title: `Force Terminating ${rentalId}`,
+      description: "This would terminate the rental in a real application.",
+      variant: "destructive",
+    });
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -80,8 +101,8 @@ export default function RentalsPage() {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                      <DropdownMenuItem>View Details</DropdownMenuItem>
-                      <DropdownMenuItem>Force Termination</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleViewDetails(rental.id)}>View Details</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleForceTermination(rental.id)}>Force Termination</DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </TableCell>

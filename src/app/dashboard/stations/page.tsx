@@ -1,3 +1,6 @@
+
+'use client';
+
 import Image from "next/image";
 import { MoreHorizontal, PlusCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -25,9 +28,32 @@ import {
 } from "@/components/ui/table";
 import { stations } from "@/lib/data";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
+import { useToast } from "@/hooks/use-toast";
 
 export default function StationsPage() {
     const mapPlaceholder = PlaceHolderImages.find(img => img.id === 'map-placeholder');
+    const { toast } = useToast();
+
+    const handleAddStation = () => {
+        toast({
+            title: "Add Station",
+            description: "This would open a form to add a new station.",
+        });
+    };
+
+    const handleEdit = (stationId: string) => {
+        toast({
+            title: `Editing ${stationId}`,
+            description: "This feature is not yet implemented.",
+        });
+    };
+
+    const handleViewDetails = (stationId: string) => {
+        toast({
+            title: `Viewing Details for ${stationId}`,
+            description: "This would navigate to a station details page.",
+        });
+    };
 
   return (
     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
@@ -40,7 +66,7 @@ export default function StationsPage() {
                 Add or update station information and monitor e-bike distribution.
               </CardDescription>
             </div>
-            <Button size="sm" className="gap-1">
+            <Button size="sm" className="gap-1" onClick={handleAddStation}>
               <PlusCircle className="h-3.5 w-3.5" />
               <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
                 Add Station
@@ -78,8 +104,8 @@ export default function StationsPage() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem>Edit</DropdownMenuItem>
-                        <DropdownMenuItem>View Details</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleEdit(station.id)}>Edit</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleViewDetails(station.id)}>View Details</DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>

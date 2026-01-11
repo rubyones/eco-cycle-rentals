@@ -1,3 +1,6 @@
+
+'use client';
+
 import Image from "next/image";
 import { MoreHorizontal, PlusCircle, Lock, Unlock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -25,7 +28,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { bikes } from "@/lib/data";
+import { bikes as initialBikes, Bike } from "@/lib/data";
 import {
     Pagination,
     PaginationContent,
@@ -36,6 +39,8 @@ import {
     PaginationPrevious,
   } from "@/components/ui/pagination";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
+import React, { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
 
 const statusVariant = {
     'Available': 'secondary',
@@ -45,6 +50,50 @@ const statusVariant = {
 } as const;
 
 export default function BikesPage() {
+  const [bikes, setBikes] = useState<Bike[]>(initialBikes);
+  const { toast } = useToast();
+
+  const handleAddBike = () => {
+    // In a real app, this would open a form to add a new bike.
+    // For now, we'll just show a toast notification.
+    toast({
+        title: "Add E-Bike",
+        description: "This feature is not yet implemented.",
+    });
+  }
+
+  const handleEdit = (bikeId: string) => {
+    toast({
+        title: `Editing ${bikeId}`,
+        description: "This feature is not yet implemented.",
+    });
+  };
+
+  const handleToggleLock = (bikeId: string) => {
+    setBikes(currentBikes =>
+      currentBikes.map(bike => {
+        if (bike.id === bikeId) {
+          const newStatus = bike.status === 'Locked' ? 'Available' : 'Locked';
+          toast({
+            title: `Bike ${bikeId} ${newStatus}`,
+            description: `The bike has been successfully ${newStatus.toLowerCase()}.`,
+          });
+          return { ...bike, status: newStatus };
+        }
+        return bike;
+      })
+    );
+  };
+
+  const handleDeactivate = (bikeId: string) => {
+    toast({
+        title: `Deactivating ${bikeId}`,
+        description: "This feature is not yet implemented, but in a real app this would deactivate the bike.",
+        variant: "destructive"
+    });
+  }
+
+
   return (
     <Card>
       <CardHeader>
@@ -55,7 +104,7 @@ export default function BikesPage() {
                 Register new e-bike units, modify existing records, and remotely lock/unlock e-bikes.
                 </CardDescription>
             </div>
-            <Button size="sm" className="gap-1">
+            <Button size="sm" className="gap-1" onClick={handleAddBike}>
                 <PlusCircle className="h-3.5 w-3.5" />
                 <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
                 Add E-Bike
@@ -112,13 +161,15 @@ export default function BikesPage() {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                      <DropdownMenuItem>Edit</DropdownMenuItem>
-                      {bike.status === 'Locked' ? (
-                          <DropdownMenuItem><Unlock className="mr-2 h-4 w-4" />Unlock</DropdownMenuItem>
-                      ) : (
-                          <DropdownMenuItem><Lock className="mr-2 h-4 w-4" />Lock</DropdownMenuItem>
-                      )}
-                      <DropdownMenuItem>Deactivate</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleEdit(bike.id)}>Edit</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleToggleLock(bike.id)}>
+                        {bike.status === 'Locked' ? (
+                          <><Unlock className="mr-2 h-4 w-4" />Unlock</>
+                        ) : (
+                          <><Lock className="mr-2 h-4 w-4" />Lock</>
+                        )}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleDeactivate(bike.id)}>Deactivate</DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </TableCell>

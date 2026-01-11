@@ -1,3 +1,6 @@
+
+'use client';
+
 import { MoreHorizontal } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -25,9 +28,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { renters } from "@/lib/data";
+import { renters as initialRenters, Renter } from "@/lib/data";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious, PaginationEllipsis } from "@/components/ui/pagination";
+import React, { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
 
 const statusVariant = {
     'Active': 'secondary',
@@ -35,6 +40,41 @@ const statusVariant = {
 } as const;
 
 export default function RentersPage() {
+  const [renters, setRenters] = useState<Renter[]>(initialRenters);
+  const { toast } = useToast();
+
+  const handleViewProfile = (renterId: string) => {
+    toast({
+      title: `Viewing profile for ${renterId}`,
+      description: "This feature is not yet implemented.",
+    });
+  };
+
+  const handleToggleSuspend = (renterId: string) => {
+    setRenters(currentRenters =>
+      currentRenters.map(renter => {
+        if (renter.id === renterId) {
+          const newStatus = renter.status === 'Suspended' ? 'Active' : 'Suspended';
+          toast({
+            title: `Account ${newStatus}`,
+            description: `Renter ${renter.name}'s account has been ${newStatus.toLowerCase()}.`,
+            variant: newStatus === 'Suspended' ? 'destructive' : 'default',
+          });
+          return { ...renter, status: newStatus };
+        }
+        return renter;
+      })
+    );
+  };
+
+  const handleDeactivate = (renterId: string) => {
+    toast({
+      title: `Deactivating ${renterId}`,
+      description: "This is a placeholder. A real app would deactivate the account.",
+      variant: 'destructive',
+    });
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -91,9 +131,11 @@ export default function RentersPage() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem>View Profile</DropdownMenuItem>
-                        <DropdownMenuItem>Suspend Account</DropdownMenuItem>
-                        <DropdownMenuItem className="text-destructive">Deactivate</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleViewProfile(renter.id)}>View Profile</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleToggleSuspend(renter.id)}>
+                          {renter.status === 'Suspended' ? 'Unsuspend Account' : 'Suspend Account'}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem className="text-destructive" onClick={() => handleDeactivate(renter.id)}>Deactivate</DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>

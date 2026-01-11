@@ -1,3 +1,6 @@
+
+'use client';
+
 import { Bell, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,10 +13,41 @@ import {
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { Separator } from "@/components/ui/separator";
-import { notificationSettings } from "@/lib/data";
+import { notificationSettings as initialSettings } from "@/lib/data";
+import React, { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
 
 export default function NotificationsPage() {
+  const [notificationSettings, setNotificationSettings] = useState(initialSettings);
+  const [announcement, setAnnouncement] = useState("");
+  const { toast } = useToast();
+
+  const handleToggle = (id: 'rental-reminders' | 'payment-due' | 'lock-warnings') => {
+    setNotificationSettings(currentSettings =>
+      currentSettings.map(setting =>
+        setting.id === id ? { ...setting, active: !setting.active } : setting
+      )
+    );
+  };
+
+  const handleSendAnnouncement = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (announcement.trim() === "") {
+        toast({
+            title: "Empty Message",
+            description: "Cannot send an empty announcement.",
+            variant: "destructive"
+        });
+        return;
+    }
+    toast({
+        title: "Announcement Sent!",
+        description: `Message: "${announcement}"`,
+    });
+    setAnnouncement("");
+  };
+
+
   return (
     <div className="grid gap-6 lg:grid-cols-5">
       <div className="lg:col-span-3">
@@ -38,7 +72,8 @@ export default function NotificationsPage() {
                 <Switch
                   id={setting.id}
                   aria-label={setting.label}
-                  defaultChecked={setting.active}
+                  checked={setting.active}
+                  onCheckedChange={() => handleToggle(setting.id)}
                 />
               </div>
             ))}
@@ -54,12 +89,14 @@ export default function NotificationsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form className="space-y-4">
+            <form className="space-y-4" onSubmit={handleSendAnnouncement}>
                 <Textarea
                     placeholder="Type your announcement here..."
                     className="min-h-36"
+                    value={announcement}
+                    onChange={(e) => setAnnouncement(e.target.value)}
                 />
-                <Button className="w-full">
+                <Button type="submit" className="w-full">
                     <Send className="mr-2 h-4 w-4" /> Send Announcement
                 </Button>
             </form>
