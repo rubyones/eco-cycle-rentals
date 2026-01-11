@@ -35,7 +35,16 @@ export type Rental = {
   startTime: string | Timestamp;
   endTime: string | Timestamp | null;
   rentalFee: number;
-  status: 'active' | 'completed' | 'overdue';
+  status: 'active' | 'completed' | 'overdue' | 'paid';
+};
+
+export type Payment = {
+    id: string;
+    renterId: string;
+    rentalId: string;
+    paymentDate: string | Timestamp;
+    amount: number;
+    status: 'paid' | 'pending' | 'failed';
 };
 
 export type NotificationSetting = {

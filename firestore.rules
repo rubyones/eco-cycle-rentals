@@ -22,9 +22,9 @@
  * - Path-Based Ownership: All rules for subcollections under a user's
  *   document (`/renters/{renterId}/*`) derive their authorization from the
  *   `renterId` in the path, ensuring a user can only ever access their own data tree.
- * - Public & Admin Data: `/ebikes`, `/stations`, and the top-level `/rentals`
+ * - Public & Admin Data: `/ebikes`, `/stations`, and the top-level `/rentals` and `/payments`
  *   are publicly readable to allow any user (for bikes/stations) or any signed-in
- *   user (for rentals) to view data needed for the application and dashboard.
+ *   user (for rentals/payments) to view data needed for the application and dashboard.
  *   Writes to these collections are now allowed for any signed-in user, assuming they are an admin.
  * - Authenticated Actions: Reporting a maintenance issue is allowed for any
  *   signed-in user, but managing (reading, updating, deleting) these issues
@@ -170,6 +170,20 @@ service cloud.firestore {
     match /rentals/{rentalId} {
       allow read: if isSignedIn();
       allow write: if isSignedIn(); // For seeding/testing
+    }
+    
+    /**
+     * @description Top-level payments collection for admin dashboard. Renters can create their own payments.
+     * @path        /payments/{paymentId}
+     * @allow       (read) Any signed-in user (admin) can read payment data.
+     * @allow       (create) A renter can create their own payment document.
+     * @principle   Provides admin-level read access and allows user-owned writes.
+     */
+    match /payments/{paymentId} {
+        allow read: if isSignedIn();
+        allow create: if isOwner(request.resource.data.renterId);
+        allow update: if isSignedIn(); // Admin can update
+        allow delete: if isSignedIn(); // Admin can delete
     }
 
 

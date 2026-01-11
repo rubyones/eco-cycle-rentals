@@ -11,6 +11,7 @@ import {
     Users,
     Wrench,
     ListOrdered,
+    CreditCard,
 } from "lucide-react";
 import {
     SidebarMenu,
@@ -24,6 +25,7 @@ const navItems = [
     { href: "/dashboard/stations", label: "Stations", icon: MapPin },
     { href: "/dashboard/renters", label: "Renter Management", icon: Users },
     { href: "/dashboard/rentals", label: "Rental Monitoring", icon: ListOrdered },
+    { href: "/dashboard/payments", label: "Payments", icon: CreditCard },
     { href: "/dashboard/maintenance", label: "Maintenance", icon: Wrench },
     { href: "/dashboard/notifications", label: "Notifications", icon: Bell },
 ];

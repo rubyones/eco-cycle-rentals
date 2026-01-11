@@ -2,15 +2,15 @@
 
 import { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { Bike, Clock, DollarSign, Loader2, LogOut, History } from 'lucide-react';
+import { Bike, Clock, DollarSign, Loader2, LogOut, History, CreditCard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useUser, useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { collection, query, where, Timestamp } from 'firebase/firestore';
-import { Rental } from '@/lib/types';
+import { Rental, Payment } from '@/lib/types';
 import { formatBikeId } from '@/lib/utils';
-import { updateDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { addDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { doc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { RentBikeForm } from './rent-bike-form';
@@ -22,6 +22,7 @@ const statusVariant = {
     'active': 'default',
     'completed': 'secondary',
     'overdue': 'destructive',
+    'paid': 'outline',
 } as const;
 
 
@@ -112,6 +113,38 @@ function RenterDashboardContent() {
     toast({
       title: "Rental Ended",
       description: "Thank you for riding with us!",
+    });
+  }
+
+  const handlePayment = (rental: Rental) => {
+    if (!firestore || !user) return;
+
+    const paymentsCollection = collection(firestore, 'payments');
+    const rentalRef = doc(firestore, 'rentals', rental.id);
+
+    const newPayment: Omit<Payment, 'id'> = {
+        renterId: user.uid,
+        rentalId: rental.id,
+        paymentDate: new Date().toISOString(),
+        amount: rental.rentalFee,
+        status: 'paid'
+    };
+
+    addDocumentNonBlocking(paymentsCollection, newPayment).then(docRef => {
+        if(docRef) {
+            updateDocumentNonBlocking(doc(firestore, 'payments', docRef.id), { id: docRef.id });
+        }
+        updateDocumentNonBlocking(rentalRef, { status: 'paid' });
+        toast({
+            title: "Payment Successful",
+            description: `Payment of ₱${rental.rentalFee.toFixed(2)} has been processed.`,
+        });
+    }).catch(() => {
+        toast({
+            title: "Payment Failed",
+            description: "There was an issue processing your payment. Please try again.",
+            variant: "destructive"
+        });
     });
   }
 
@@ -220,17 +253,18 @@ function RenterDashboardContent() {
                                 <TableHead>Duration</TableHead>
                                 <TableHead className="text-right">Fee</TableHead>
                                 <TableHead>Status</TableHead>
+                                <TableHead></TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {isLoadingRentals && (
                                 <TableRow>
-                                    <TableCell colSpan={5} className="h-24 text-center">Loading history...</TableCell>
+                                    <TableCell colSpan={6} className="h-24 text-center">Loading history...</TableCell>
                                 </TableRow>
                             )}
                             {!isLoadingRentals && rentalHistory.length === 0 && (
                                 <TableRow>
-                                    <TableCell colSpan={5} className="h-24 text-center">No past rentals found.</TableCell>
+                                    <TableCell colSpan={6} className="h-24 text-center">No past rentals found.</TableCell>
                                 </TableRow>
                             )}
                             {!isLoadingRentals && rentalHistory.map(rental => (
@@ -241,6 +275,14 @@ function RenterDashboardContent() {
                                     <TableCell className="text-right">₱{rental.rentalFee.toFixed(2)}</TableCell>
                                     <TableCell>
                                         <Badge variant={statusVariant[rental.status.toLowerCase() as keyof typeof statusVariant]}>{rental.status}</Badge>
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                        {rental.status === 'completed' && (
+                                            <Button size="sm" onClick={() => handlePayment(rental)}>
+                                                <CreditCard className="mr-2 h-4 w-4"/>
+                                                Pay Now
+                                            </Button>
+                                        )}
                                     </TableCell>
                                 </TableRow>
                             ))}
