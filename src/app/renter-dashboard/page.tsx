@@ -11,7 +11,7 @@ import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { collection, query, where, Timestamp } from 'firebase/firestore';
 import { signOut } from 'firebase/auth';
 import { Rental, Payment, Station } from '@/lib/types';
-import { formatBikeId } from '@/lib/utils';
+import { formatBikeId, formatRentalId } from '@/lib/utils';
 import { addDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { doc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
@@ -94,16 +94,16 @@ function RenterDashboardContent() {
         const minutes = Math.floor((durationSeconds % 3600) / 60);
         const seconds = durationSeconds % 60;
         
-        const durationMinutes = Math.floor(durationSeconds / 60);
+        const durationMinutes = Math.max(0, Math.floor(durationSeconds / 60));
 
         let currentFee = 0;
         if (durationMinutes <= 60) {
-            currentFee = 120;
+            currentFee = 120; // Base fee for the first hour
         } else {
-            const extraHours = Math.ceil((durationMinutes - 60) / 60);
+            const extraMinutes = durationMinutes - 60;
+            const extraHours = Math.ceil(extraMinutes / 60); // Charge for any fraction of an hour
             currentFee = 120 + extraHours * 50;
         }
-
 
         setDuration(`${hours}h ${minutes}m ${seconds}s`);
         setFee(currentFee.toFixed(2));
@@ -317,7 +317,7 @@ function RenterDashboardContent() {
                                             <TableCell>{formatTimestamp(rental.startTime)}</TableCell>
                                             <TableCell>{formatTimestamp(rental.endTime)}</TableCell>
                                             <TableCell>{calculateDuration(rental.startTime, rental.endTime)}</TableCell>
-                                            <TableCell className="text-right">₱{rental.rentalFee.toFixed(2)}</TableCell>
+                                            <TableCell className="text-right">₱{(rental.rentalFee || 0).toFixed(2)}</TableCell>
                                             <TableCell>
                                                 <Badge variant={statusVariant[rental.status.toLowerCase() as keyof typeof statusVariant]}>{rental.status}</Badge>
                                             </TableCell>
@@ -345,3 +345,5 @@ export default function RenterDashboard() {
         </FirebaseClientProvider>
     )
 }
+
+    
