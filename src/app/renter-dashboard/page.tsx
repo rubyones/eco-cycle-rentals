@@ -8,7 +8,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useUser, useCollection, useFirestore, useMemoFirebase, useAuth } from '@/firebase';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
-import { collection, query, where, Timestamp, signOut } from 'firebase/firestore';
+import { collection, query, where, Timestamp } from 'firebase/firestore';
+import { signOut } from 'firebase/auth';
 import { Rental, Payment, Station } from '@/lib/types';
 import { formatBikeId } from '@/lib/utils';
 import { addDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase/non-blocking-updates';
@@ -329,3 +330,5 @@ export default function RenterDashboard() {
         </FirebaseClientProvider>
     )
 }
+
+    
